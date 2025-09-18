@@ -4,36 +4,37 @@
 #include <atomic>
 
 #include <rsl/logging/context.hpp>
+#include <rsl/logging/logger.hpp>
 
 namespace rsl::logging {
+thread_local Context* current_context = Context::get_default();
 
 void Context::enter(bool handover) {
-  std::println("a {} -> {:x} <-> {:x} ({} {} <-> {} {})", 
-    std::this_thread::get_id(),
-    std::uintptr_t(current_context),
-    std::uintptr_t(this),
-    current_context->name,
-    current_context->id,
-    name,
-    id);
   assert(parent == nullptr);
-  parent       = current_context;
+  parent          = current_context;
   current_context = this;
+  default_logger()->enter_span(*this, handover);
 }
 
 void Context::exit(bool handover) {
-  // TODO figure out why this doesn't always hold
-  // assert(current_context == this); 
-  std::println("d {} -> {:x} <-> {:x} ({} {} <-> {} {})", 
-    std::this_thread::get_id(),
-    std::uintptr_t(current_context),
-    std::uintptr_t(this),
-    current_context->name,
-    current_context->id,
-    name,
-    id);
-  current_context = parent;
-  parent       = nullptr;
+  default_logger()->exit_span(*this, handover);
+  if (current_context && current_context->id == id) {
+    // fast path - we were are in the current context
+    current_context = current_context->parent;
+    parent          = nullptr;
+    return;
+  }
+
+  for (Context* current = current_context; current != nullptr && current->parent; current = current->parent) {
+    if (current->parent->id == id) {
+      current->parent = current->parent->parent;
+      parent          = nullptr;
+      return;
+    }
+  }
+
+  // TODO throw?
+  std::unreachable();
 }
 
 bool Context::enabled_for(LogLevel level) const {

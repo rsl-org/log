@@ -1,5 +1,5 @@
 #pragma once
-
+#include "logging/event.hpp"
 #include "logging/logger.hpp"
 #include "logging/context.hpp"
 

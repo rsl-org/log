@@ -3,7 +3,7 @@
 using enum rsl::logging::LogLevel;
 
 void bar() {
-  rsl::logging::ContextGuard context{"main", INFO};
+  rsl::logging::ContextGuard context{"bar", INFO};
   rsl::info("from bar");
 }
 

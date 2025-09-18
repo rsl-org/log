@@ -3,8 +3,6 @@
 #include <string_view>
 #include <coroutine>
 
-#include <print> //! remove, only here for printbugging
-
 #include <rsl/_impl/consumable.hpp>
 #include "interface.hpp"
 #include "field.hpp"
@@ -56,7 +54,7 @@ struct RSL_CONSUMABLE(unconsumed) Context {
   [[nodiscard]] bool enabled_for(LogLevel level) const;
 };
 
-thread_local Context* current_context = Context::get_default();
+extern thread_local Context* current_context;
 
 struct ContextGuard : private Context {
   explicit ContextGuard(std::string name, LogLevel min_level) : Context(std::move(name), min_level) {
@@ -105,17 +103,11 @@ struct AwaiterWrapper {
   decltype(auto) await_suspend(H h) noexcept(noexcept(to_awaiter(original).await_suspend(h))) {
     promise->saved_span    = Context{current_context->name, current_context->min_level};
     promise->saved_span.id = current_context->id;
-    std::println("dd {:x} {:x}",
-                 std::uintptr_t(&promise->saved_span),
-                 std::uintptr_t(current_context));
     current_context->exit(true);
     return to_awaiter(original).await_suspend(h);
   }
 
   decltype(auto) await_resume() noexcept(noexcept(to_awaiter(original).await_resume())) {
-    std::println("aa {:x} {:x}",
-                 std::uintptr_t(&promise->saved_span),
-                 std::uintptr_t(current_context));
     promise->saved_span.enter(true);
     return to_awaiter(original).await_resume();
   }

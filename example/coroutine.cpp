@@ -22,7 +22,7 @@ struct Task {
 };
 
 rsl::co_trace<Task> example() {
-  auto _ = rsl::logging::ContextGuard(rsl::logging::LogLevel::INHERIT, "example");
+  auto _ = rsl::logging::ContextGuard("example", rsl::logging::LogLevel::INHERIT);
   rsl::info("Coroutine started on thread {}", std::this_thread::get_id());
   co_await std::suspend_always{};  // suspend once
   rsl::info("Coroutine resumed on thread {}", std::this_thread::get_id());
@@ -30,7 +30,7 @@ rsl::co_trace<Task> example() {
 
 int main() {
   rsl::info("Before main context");
-  auto _ = rsl::logging::ContextGuard(rsl::logging::LogLevel::DEBUG, "main");
+  auto _ = rsl::logging::ContextGuard("main", rsl::logging::LogLevel::DEBUG);
   rsl::info("After main context");
   auto ex = example();
 

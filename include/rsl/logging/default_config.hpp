@@ -2,24 +2,6 @@
 #include "logger.hpp"
 #include "interface.hpp"
 
-#ifdef RSL_LOG_ASYNC
-#  ifdef RSL_LOG_IS_SYNCHRONOUS
-#    error "Logger reincluded in asynchronous mode. Prior to this synchronous mode was used."
-#  endif
-#  ifndef RSL_LOG_IS_ASYNCHRONOUS
-#    define RSL_LOG_IS_ASYNCHRONOUS
-#  endif
-#  include "mode/async.hpp"
-#else
-#  ifdef RSL_LOG_IS_ASYNCHRONOUS
-#    error "Logger reincluded in synchronous mode. Prior to this asynchronous mode was used."
-#  endif
-#  ifndef RSL_LOG_IS_SYNCHRONOUS
-#    define RSL_LOG_IS_SYNCHRONOUS
-#  endif
-#  include "mode/basic.hpp"
-#endif
-
 namespace rsl::logging {
 #ifdef RSL_LOG_MIN_LEVEL
 constexpr inline LogLevel global_min_level = [] {
@@ -30,10 +12,11 @@ constexpr inline LogLevel global_min_level = [] {
 constexpr inline LogLevel global_min_level = LogLevel::INFO;
 #endif
 
-#ifdef RSL_LOG_ASYNC
-using GlobalLogger = AsyncLogger;
-#else
-using GlobalLogger = BasicLogger;
+#ifdef RSL_LOG_LAZY
+#define RSL_LOG_EMITTER rsl::logging::lazy_emitter
+#endif
 
+#ifndef RSL_LOG_EMITTER
+#define RSL_LOG_EMITTER rsl::logging::eager_emitter
 #endif
 }  // namespace rsl::logging

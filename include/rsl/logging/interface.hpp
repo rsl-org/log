@@ -9,15 +9,15 @@
 #include <rsl/source_location>
 
 namespace rsl::logging {
-  enum class LogLevel : std::uint8_t {
-    INHERIT = 0,
-    TRACE   = 10,
-    DEBUG   = 20,
-    INFO    = 30,
-    WARNING = 40,
-    ERROR   = 50,
-    FATAL   = 60,
-    DISABLE = 255,
+enum class LogLevel : std::uint8_t {
+  INHERIT = 0,
+  TRACE   = 10,
+  DEBUG   = 20,
+  INFO    = 30,
+  WARNING = 40,
+  ERROR   = 50,
+  FATAL   = 60,
+  DISABLE = 255,
 };
 
 template <typename T>
@@ -29,23 +29,23 @@ consteval LogLevel parse_min_level(T value) {
   } else if (std::convertible_to<T const&, std::string_view>) {
     auto name = std::string_view(value);
     for (auto enumerator : enumerators_of(^^LogLevel)) {
-        if (name == identifier_of(enumerator)) {
-            return extract<LogLevel>(constant_of(enumerator));
-        }
+      if (name == identifier_of(enumerator)) {
+        return extract<LogLevel>(constant_of(enumerator));
+      }
     }
     throw "invalid level name";
   }
   throw "unrecognized min level type";
 }
 
-consteval LogLevel min_level_for(std::meta::info ctx) { 
-    while (ctx != ^^::) {
-        if (meta::has_annotation(ctx, ^^LogLevel)) {
-            return extract<LogLevel>(constant_of(meta::get_annotation(ctx, ^^LogLevel)));
-        }
-        ctx = parent_of(ctx);
+consteval LogLevel min_level_for(std::meta::info ctx) {
+  while (ctx != ^^::) {
+    if (meta::has_annotation(ctx, ^^LogLevel)) {
+      return extract<LogLevel>(constant_of(meta::get_annotation(ctx, ^^LogLevel)));
     }
-    return LogLevel::INHERIT;
+    ctx = parent_of(ctx);
+  }
+  return LogLevel::INHERIT;
 }
 
 struct Message {
@@ -56,14 +56,4 @@ struct Message {
   // timestamp
   std::string text;
 };
-
-struct Sink {
-  virtual ~Sink()                                        = default;
-  virtual void on_message(LogLevel level,
-                          std::string_view message,
-                          rsl::source_location location) = 0;
-
-  virtual void on_span_enter() {}
-  virtual void on_span_exit() {}
-};
-}
+}  // namespace rsl::logging

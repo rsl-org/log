@@ -9,4 +9,4 @@ endfunction()
 # DEFINE_EXAMPLE(colorize)
 DEFINE_EXAMPLE(spans)
 
-# DEFINE_EXAMPLE(coroutine)
+DEFINE_EXAMPLE(coroutine)
