@@ -1,0 +1,4 @@
+#pragma once
+
+#define RSL_LOG_ASYNC
+#include <rsl/log>

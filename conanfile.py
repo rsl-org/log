@@ -2,8 +2,8 @@ from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout, CMakeDeps
 
 
-class pkgRecipe(ConanFile):
-    name = "mypkg"
+class rsltestRecipe(ConanFile):
+    name = "rsl-log"
     version = "0.1"
     package_type = "library"
 
@@ -16,11 +16,16 @@ class pkgRecipe(ConanFile):
 
     # Binary configuration
     settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [True, False], "fPIC": [True, False]}
-    default_options = {"shared": False, "fPIC": True}
+    options = {
+        "shared": [True, False], "fPIC": [True, False],
+        "tests": [True, False],
+        "coverage": [True, False],
+        "examples": [True, False],
+        "editable": [True, False]
+    }
 
-    # Sources are located in the same place as this recipe, copy them to the recipe
-    exports_sources = "CMakeLists.txt", "src/*", "include/*"
+    default_options = {"shared": False, "fPIC": True, "tests": False, "coverage": False, "examples": False, "editable": False}
+    exports_sources = "CMakeLists.txt", "src/*", "include/*", "example/*", "test/*"
 
     def config_options(self):
         if self.settings.os == "Windows":
@@ -29,6 +34,10 @@ class pkgRecipe(ConanFile):
     def configure(self):
         if self.options.shared:
             self.options.rm_safe("fPIC")
+
+    def requirements(self):
+        self.requires("rsl-util/0.1", transitive_headers=True, transitive_libs=True)
+        self.test_requires("rsl-test/0.1")
 
     def layout(self):
         cmake_layout(self)
@@ -41,13 +50,24 @@ class pkgRecipe(ConanFile):
 
     def build(self):
         cmake = CMake(self)
-        cmake.configure()
+        cmake.configure(variables={
+                    "ENABLE_COVERAGE": self.options.coverage,
+                    "BUILD_EXAMPLES": self.options.examples,
+                    "BUILD_TESTING": self.options.tests
+                })
         cmake.build()
+        if self.options.editable:
+            # package is in editable mode - make sure it's installed after building
+            cmake.install()
 
     def package(self):
         cmake = CMake(self)
         cmake.install()
 
     def package_info(self):
-        self.cpp_info.libs = ["mypkg"]
-
+        self.cpp_info.set_property("cmake_file_name", "rsl")
+        self.cpp_info.components["log"].set_property("cmake_target_name", "rsl::log")
+        self.cpp_info.components["log"].includedirs = ["include"]
+        self.cpp_info.components["log"].libdirs = ["lib"]
+        self.cpp_info.components["log"].requires = []
+        self.cpp_info.components["log"].libs = ["rsl-log"]

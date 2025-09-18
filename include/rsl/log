@@ -1,0 +1,100 @@
+#pragma once
+
+#include "logging/logger.hpp"
+#include "logging/context.hpp"
+
+#ifdef RSL_DOLLAR_MACROS
+#define $context(...) RSL_CONTEXT(__VA_ARGS__)
+#define $field(...) RSL_FIELD(__VA_ARGS__)
+#define $trace
+#define $debug
+#define $info
+#define $warning
+#define $error
+#define $fatal_error
+#endif
+
+namespace rsl {
+namespace log {
+  using context = logging::Context;
+  using context_guard = logging::ContextGuard;
+}
+
+// annotation
+using min_log_level = logging::LogLevel;
+
+template <typename T>
+using co_trace = logging::Trace<T>;
+
+template <typename... Args>
+void trace(logging::Context const* context,
+           logging::FormatString<logging::LogLevel::TRACE, Args...> fmt,
+           Args&&... args) {
+  logging::emit_event(context, fmt, std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+void debug(logging::Context const* context,
+           logging::FormatString<logging::LogLevel::DEBUG, Args...> fmt,
+           Args&&... args) {
+  logging::emit_event(context, fmt, std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+void info(logging::Context const* context,
+         logging::FormatString<logging::LogLevel::INFO, Args...> fmt,
+         Args&&... args) {
+  logging::emit_event(context, fmt, std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+void warn(logging::Context const* context,
+          logging::FormatString<logging::LogLevel::WARNING, Args...> fmt,
+          Args&&... args) {
+  logging::emit_event(context, fmt, std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+void error(logging::Context const* context,
+           logging::FormatString<logging::LogLevel::ERROR, Args...> fmt,
+           Args&&... args) {
+  logging::emit_event(context, fmt, std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+void fatal_error(logging::Context const* context,
+                 logging::FormatString<logging::LogLevel::FATAL, Args...> fmt,
+                 Args&&... args) {
+  logging::emit_event(context, fmt, std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+void trace(logging::FormatString<logging::LogLevel::TRACE, Args...> fmt, Args&&... args) {
+  logging::emit_event(logging::current_context, fmt, std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+void debug(logging::FormatString<logging::LogLevel::DEBUG, Args...> fmt, Args&&... args) {
+  logging::emit_event(logging::current_context, fmt, std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+void info(logging::FormatString<logging::LogLevel::INFO, Args...> fmt, Args&&... args) {
+  logging::emit_event(logging::current_context, fmt, std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+void warn(logging::FormatString<logging::LogLevel::WARNING, Args...> fmt, Args&&... args) {
+  logging::emit_event(logging::current_context, fmt, std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+void error(logging::FormatString<logging::LogLevel::ERROR, Args...> fmt, Args&&... args) {
+  logging::emit_event(logging::current_context, fmt, std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+void fatal_error(logging::FormatString<logging::LogLevel::FATAL, Args...> fmt, Args&&... args) {
+  logging::emit_event(logging::current_context, fmt, std::forward<Args>(args)...);
+}
+}  // namespace rsl
