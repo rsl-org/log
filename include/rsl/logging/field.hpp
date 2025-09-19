@@ -49,7 +49,24 @@ constexpr VTable const* make_vtable() {
 class Field {
   void* ptr                   = nullptr;
   _impl::VTable const* vtable = nullptr;
-  bool owning                 = false;
+
+  // TODO maybe count references in owning mode?
+  bool owning = false;
+
+  void destroy() {
+    if (owning) {
+      vtable->destroy(ptr);
+    }
+    ptr    = nullptr;
+    owning = false;
+  }
+
+  Field(void* ptr, _impl::VTable const* vtable, bool owning, std::string_view name, std::string_view type_name)
+  : ptr(ptr)
+  , vtable(vtable)
+  , owning(owning)
+  , name(name)
+  , type_name(type_name) {}
 
 public:
   std::string_view name;
@@ -57,22 +74,49 @@ public:
 
   Field() = default;
 
-  Field(Field const& other)            = default;
-  Field& operator=(Field const& other) = default;
+  Field(const Field& other)
+      : ptr(other.owning ? other.vtable->clone(other.ptr) : other.ptr)
+      , vtable(other.vtable)
+      , owning(other.owning)
+      , name(other.name)
+      , type_name(other.type_name) {}
 
-  Field(Field&& other) noexcept { swap(other); }
-
-  void swap(Field& other) noexcept {
-    using std::swap;
-    vtable = other.vtable;
-    swap(ptr, other.ptr);
-    swap(owning, other.owning);
-    swap(name, other.name);
-    swap(type_name, other.type_name);
+  // move constructor
+  Field(Field&& other) noexcept
+      : ptr(other.ptr)
+      , vtable(other.vtable)
+      , owning(other.owning)
+      , name(other.name)
+      , type_name(other.type_name) {
+    other.ptr    = nullptr;
+    other.owning = false;
   }
 
-  Field& operator=(Field&& other) {
-    swap(other);
+  // copy assignment
+  Field& operator=(const Field& other) {
+    if (this != &other) {
+      destroy();
+      ptr       = other.owning ? other.vtable->clone(other.ptr) : other.ptr;
+      vtable    = other.vtable;
+      owning    = other.owning;
+      name      = other.name;
+      type_name = other.type_name;
+    }
+    return *this;
+  }
+
+  // move assignment
+  Field& operator=(Field&& other) noexcept {
+    if (this != &other) {
+      destroy();
+      ptr          = other.ptr;
+      vtable       = other.vtable;
+      owning       = other.owning;
+      name         = other.name;
+      type_name    = other.type_name;
+      other.ptr    = nullptr;
+      other.owning = false;
+    }
     return *this;
   }
 
@@ -86,17 +130,11 @@ public:
       , owning(needs_cleanup) {}
 
   ~Field() noexcept {
-    if (owning) {
-      //! TODO
-      // vtable->destroy(ptr);
-    }
+    destroy();
   }
 
   [[nodiscard]] Field clone() const {
-    Field copy = *this;
-    copy.ptr = vtable->clone(ptr);
-    copy.owning = true;
-    return copy;
+    return Field(ptr ? vtable->clone(ptr) : nullptr, vtable, true, name, type_name);
   }
 
   template <class T>
