@@ -37,6 +37,7 @@ class rsltestRecipe(ConanFile):
 
     def requirements(self):
         self.requires("rsl-util/0.1", transitive_headers=True, transitive_libs=True)
+        self.requires("kwargs/0.1", transitive_headers=True, transitive_libs=True)
         self.test_requires("rsl-test/0.1")
 
     def layout(self):

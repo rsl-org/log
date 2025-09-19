@@ -3,15 +3,17 @@
 #include "logging/logger.hpp"
 #include "logging/context.hpp"
 
+#include "logging/_impl/args.hpp"
+
+#include <kwargs.h>
+#define RSL_LOG_EXTRA(...) make_args(__VA_ARGS__)
+
+#define RSL_LOG_CONTEXT(name, level, ...) \
+  rsl::log::context_guard _(name, level, RSL_LOG_ARGS, RSL_LOG_EXTRA(__VA_ARGS__))
+
 #ifdef RSL_DOLLAR_MACROS
-#define $context(...) RSL_CONTEXT(__VA_ARGS__)
-#define $field(...) RSL_FIELD(__VA_ARGS__)
-#define $trace
-#define $debug
-#define $info
-#define $warning
-#define $error
-#define $fatal_error
+#define $log_args RSL_LOG_ARGS
+#define $context(name, ...) RSL_LOG_CONTEXT(name, __VA_ARGS__)
 #endif
 
 namespace rsl {
@@ -22,6 +24,7 @@ namespace log {
 
 // annotation
 using min_log_level = logging::LogLevel;
+using log_level = logging::LogLevel;
 
 template <typename T>
 using co_trace = logging::Trace<T>;

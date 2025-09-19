@@ -16,8 +16,8 @@ struct Sink {
   // virtual bool is_interested(/* scope */) { return true; }
   
   virtual void emit_event(Context const* ctx, Message const& event) = 0;
-  virtual void enter_span(Context const& ctx, bool handover) {}
-  virtual void exit_span(Context const& ctx, bool handover) {}
+  virtual void enter_context(Context const& ctx, bool handover) {}
+  virtual void exit_context(Context const& ctx, bool handover) {}
 };
 
 struct BasicLogger : Sink {
@@ -30,14 +30,14 @@ struct BasicLogger : Sink {
       sink->emit_event(ctx, msg);
     }
   }
-  void enter_span(Context const& ctx, bool handover) override {
+  void enter_context(Context const& ctx, bool handover) override {
     for (auto sink : sinks) {
-      sink->enter_span(ctx, handover);
+      sink->enter_context(ctx, handover);
     }
   }
-  void exit_span(Context const& ctx, bool handover) override {
+  void exit_context(Context const& ctx, bool handover) override {
     for (auto sink : sinks) {
-      sink->exit_span(ctx, handover);
+      sink->exit_context(ctx, handover);
     }
   }
 };

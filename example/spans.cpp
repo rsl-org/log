@@ -19,7 +19,7 @@ int main() {
   // rsl::logging::ContextGuard context{INFO, "main"};
   auto x = 42;
   auto ctx = rsl::log::context("main", INFO);
-  ctx.extra = rsl::_log_impl::ExtraFields{{rsl::_log_impl::Field(^^x).set_ptr(&x)}};
+  // ctx.extra = rsl::_log_impl::ExtraFields{{rsl::_log_impl::Field(^^x).set_ptr(&x)}};
   ctx.enter();
   rsl::error("test error");
   foo();

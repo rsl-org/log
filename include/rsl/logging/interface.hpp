@@ -8,6 +8,8 @@
 #include <rsl/meta_traits>
 #include <rsl/source_location>
 
+#include "field.hpp"
+
 namespace rsl::logging {
 enum class LogLevel : std::uint8_t {
   INHERIT = 0,
@@ -55,5 +57,6 @@ struct Message {
   // thread id
   // timestamp
   std::string text;
+  _log_impl::ExtraFields arguments;
 };
 }  // namespace rsl::logging

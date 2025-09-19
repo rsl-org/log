@@ -3,6 +3,7 @@
 #include <string_view>
 #include <coroutine>
 
+#include <rsl/source_location>
 #include <rsl/_impl/consumable.hpp>
 #include "interface.hpp"
 #include "field.hpp"
@@ -16,27 +17,33 @@ struct RSL_CONSUMABLE(unconsumed) Context {
   std::string name;
   _log_impl::ExtraFields arguments;
   _log_impl::ExtraFields extra;
+  rsl::source_location sloc;
 
   Context() = default;
 
   RSL_RETURN_TYPESTATE(unconsumed)
-  explicit Context(std::string name, LogLevel min_level)
+  Context(std::string name,
+          LogLevel min_level,
+          _log_impl::ExtraFields arguments = {},
+          _log_impl::ExtraFields extra     = {},
+          rsl::source_location const& sloc = std::source_location::current())
       : min_level(min_level)
+      , id(next_id())
       , name(std::move(name))
-      , id(next_id()) {}
-
+      , arguments(std::move(arguments))
+      , extra(std::move(extra))
+      , sloc(sloc) {}
   // shallow copy
-  RSL_RETURN_TYPESTATE(unconsumed)
-  Context(Context const& other) = default;
+  RSL_RETURN_TYPESTATE(unconsumed) Context(Context const& other) = default;
 
   [[nodiscard]] Context clone() const {
     Context cloned{};
-    cloned.parent = nullptr;
+    cloned.parent    = nullptr;
     cloned.min_level = min_level;
-    cloned.id = id;
-    cloned.name = name;
+    cloned.id        = id;
+    cloned.name      = name;
     cloned.arguments = arguments.clone();
-    cloned.extra = extra.clone();
+    cloned.extra     = extra.clone();
     return cloned;
   }
 
@@ -57,7 +64,12 @@ struct RSL_CONSUMABLE(unconsumed) Context {
 extern thread_local Context* current_context;
 
 struct ContextGuard : private Context {
-  explicit ContextGuard(std::string name, LogLevel min_level) : Context(std::move(name), min_level) {
+  explicit ContextGuard(std::string name,
+                        LogLevel min_level,
+                        _log_impl::ExtraFields arguments = {},
+                        _log_impl::ExtraFields extra     = {},
+                        rsl::source_location const& sloc = std::source_location::current())
+      : Context(name, min_level, arguments, extra, sloc) {
     enter();
   }
 

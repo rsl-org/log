@@ -13,11 +13,11 @@ void Context::enter(bool handover) {
   assert(parent == nullptr);
   parent          = current_context;
   current_context = this;
-  default_logger()->enter_span(*this, handover);
+  default_logger()->enter_context(*this, handover);
 }
 
 void Context::exit(bool handover) {
-  default_logger()->exit_span(*this, handover);
+  default_logger()->exit_context(*this, handover);
   if (current_context && current_context->id == id) {
     // fast path - we were are in the current context
     current_context = current_context->parent;
