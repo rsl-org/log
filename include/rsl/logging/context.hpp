@@ -15,8 +15,8 @@ struct RSL_CONSUMABLE(unconsumed) Context {
   LogLevel min_level = LogLevel::INHERIT;
   std::size_t id     = 0;
   std::string name;
-  _log_impl::ExtraFields arguments;
-  _log_impl::ExtraFields extra;
+  ExtraFields arguments;
+  ExtraFields extra;
   rsl::source_location sloc;
 
   Context() = default;
@@ -24,8 +24,8 @@ struct RSL_CONSUMABLE(unconsumed) Context {
   RSL_RETURN_TYPESTATE(unconsumed)
   Context(std::string name,
           LogLevel min_level,
-          _log_impl::ExtraFields arguments = {},
-          _log_impl::ExtraFields extra     = {},
+          ExtraFields arguments = {},
+          ExtraFields extra     = {},
           rsl::source_location const& sloc = std::source_location::current())
       : min_level(min_level)
       , id(next_id())
@@ -66,8 +66,8 @@ extern thread_local Context* current_context;
 struct ContextGuard : private Context {
   explicit ContextGuard(std::string name,
                         LogLevel min_level,
-                        _log_impl::ExtraFields arguments = {},
-                        _log_impl::ExtraFields extra     = {},
+                        ExtraFields arguments = {},
+                        ExtraFields extra     = {},
                         rsl::source_location const& sloc = std::source_location::current())
       : Context(name, min_level, arguments, extra, sloc) {
     enter();

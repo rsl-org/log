@@ -63,7 +63,7 @@ template <LogLevel S, typename... Args>
 using FormatString = _impl::FormatString<S, std::type_identity_t<Args>...>;
 
 template <LogLevel Level, typename... Args>
-void emit_event(rsl::_log_impl::ExtraFields const* fnc_args,
+void emit_event(ExtraFields const* fnc_args,
                 Context const* context,
                 FormatString<Level, Args...> fmt,
                 Args&&... args) {

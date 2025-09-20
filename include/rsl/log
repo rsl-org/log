@@ -56,7 +56,7 @@ template <typename T>
 using co_trace = logging::Trace<T>;
 
 template <typename... Args>
-void trace(_log_impl::ExtraFields fnc_args,
+void trace(logging::ExtraFields fnc_args,
            logging::Context const* context,
            logging::FormatString<logging::LogLevel::TRACE, Args...> fmt,
            Args&&... args) {
@@ -64,7 +64,7 @@ void trace(_log_impl::ExtraFields fnc_args,
 }
 
 template <typename... Args>
-void trace(_log_impl::ExtraFields fnc_args,
+void trace(logging::ExtraFields fnc_args,
            logging::FormatString<logging::LogLevel::TRACE, Args...> fmt,
            Args&&... args) {
   logging::emit_event(&fnc_args, logging::current_context, fmt, std::forward<Args>(args)...);
@@ -83,7 +83,7 @@ void trace(logging::FormatString<logging::LogLevel::TRACE, Args...> fmt, Args&&.
 }
 
 template <typename... Args>
-void debug(_log_impl::ExtraFields fnc_args,
+void debug(logging::ExtraFields fnc_args,
            logging::Context const* context,
            logging::FormatString<logging::LogLevel::DEBUG, Args...> fmt,
            Args&&... args) {
@@ -91,7 +91,7 @@ void debug(_log_impl::ExtraFields fnc_args,
 }
 
 template <typename... Args>
-void debug(_log_impl::ExtraFields fnc_args,
+void debug(logging::ExtraFields fnc_args,
            logging::FormatString<logging::LogLevel::DEBUG, Args...> fmt,
            Args&&... args) {
   logging::emit_event(&fnc_args, logging::current_context, fmt, std::forward<Args>(args)...);
@@ -110,7 +110,7 @@ void debug(logging::FormatString<logging::LogLevel::DEBUG, Args...> fmt, Args&&.
 }
 
 template <typename... Args>
-void info(_log_impl::ExtraFields fnc_args,
+void info(logging::ExtraFields fnc_args,
           logging::Context const* context,
           logging::FormatString<logging::LogLevel::INFO, Args...> fmt,
           Args&&... args) {
@@ -118,7 +118,7 @@ void info(_log_impl::ExtraFields fnc_args,
 }
 
 template <typename... Args>
-void info(_log_impl::ExtraFields fnc_args,
+void info(logging::ExtraFields fnc_args,
           logging::FormatString<logging::LogLevel::INFO, Args...> fmt,
           Args&&... args) {
   logging::emit_event(&fnc_args, logging::current_context, fmt, std::forward<Args>(args)...);
@@ -137,7 +137,7 @@ void info(logging::FormatString<logging::LogLevel::INFO, Args...> fmt, Args&&...
 }
 
 template <typename... Args>
-void warn(_log_impl::ExtraFields fnc_args,
+void warn(logging::ExtraFields fnc_args,
           logging::Context const* context,
           logging::FormatString<logging::LogLevel::WARNING, Args...> fmt,
           Args&&... args) {
@@ -145,7 +145,7 @@ void warn(_log_impl::ExtraFields fnc_args,
 }
 
 template <typename... Args>
-void warn(_log_impl::ExtraFields fnc_args,
+void warn(logging::ExtraFields fnc_args,
           logging::FormatString<logging::LogLevel::WARNING, Args...> fmt,
           Args&&... args) {
   logging::emit_event(&fnc_args, logging::current_context, fmt, std::forward<Args>(args)...);
@@ -163,7 +163,7 @@ void warn(logging::FormatString<logging::LogLevel::WARNING, Args...> fmt, Args&&
 }
 
 template <typename... Args>
-void error(_log_impl::ExtraFields fnc_args,
+void error(logging::ExtraFields fnc_args,
            logging::Context const* context,
            logging::FormatString<logging::LogLevel::ERROR, Args...> fmt,
            Args&&... args) {
@@ -171,7 +171,7 @@ void error(_log_impl::ExtraFields fnc_args,
 }
 
 template <typename... Args>
-void error(_log_impl::ExtraFields fnc_args,
+void error(logging::ExtraFields fnc_args,
            logging::FormatString<logging::LogLevel::ERROR, Args...> fmt,
            Args&&... args) {
   logging::emit_event(&fnc_args, logging::current_context, fmt, std::forward<Args>(args)...);
@@ -189,7 +189,7 @@ void error(logging::FormatString<logging::LogLevel::ERROR, Args...> fmt, Args&&.
 }
 
 template <typename... Args>
-void fatal_error(_log_impl::ExtraFields fnc_args,
+void fatal_error(logging::ExtraFields fnc_args,
                  logging::Context const* context,
                  logging::FormatString<logging::LogLevel::FATAL, Args...> fmt,
                  Args&&... args) {
@@ -197,7 +197,7 @@ void fatal_error(_log_impl::ExtraFields fnc_args,
 }
 
 template <typename... Args>
-void fatal_error(_log_impl::ExtraFields fnc_args,
+void fatal_error(logging::ExtraFields fnc_args,
                  logging::FormatString<logging::LogLevel::FATAL, Args...> fmt,
                  Args&&... args) {
   logging::emit_event(&fnc_args, logging::current_context, fmt, std::forward<Args>(args)...);

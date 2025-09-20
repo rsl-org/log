@@ -46,7 +46,7 @@ Sink*& default_logger();
 void set_default_logger(Sink* new_logger);
 
 template <LogLevel severity, typename... Args>
-void eager_emitter(rsl::_log_impl::ExtraFields const* fnc_args,
+void eager_emitter(ExtraFields const* fnc_args,
                    Context const* ctx,
                    _impl::FormatString<severity, Args...> fmt,
                    Args&&... args) {

@@ -16,7 +16,7 @@ std::size_t level_to_syslog_level(LogLevel level) {
   }
 }
 
-std::string format_name(std::string name, rsl::_log_impl::ExtraFields arguments) {
+std::string format_name(std::string name, ExtraFields arguments) {
   if (not arguments.is_empty()) {
     name = name.substr(0, name.find('('));
     name += "(";

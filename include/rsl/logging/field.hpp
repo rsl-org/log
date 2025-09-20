@@ -12,7 +12,7 @@
 
 #include <kwargs.h>
 
-namespace rsl::_log_impl {
+namespace rsl::logging {
 namespace _impl {
 template <typename T>
 struct Impl {

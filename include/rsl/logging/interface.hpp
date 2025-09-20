@@ -57,6 +57,6 @@ struct Message {
   // thread id
   // timestamp
   std::string text;
-  _log_impl::ExtraFields arguments;
+  ExtraFields arguments;
 };
 }  // namespace rsl::logging
