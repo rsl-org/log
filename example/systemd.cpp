@@ -3,16 +3,17 @@
 #include <rsl/log>
 #include <rsl/logging/sinks.hpp>
 
-void bar() {
+void bar(int x) {
   rsl::info("from bar");
+  $info("from bar with context");
 }
 
 void foo(int x, char y) {
   int test = 42;
   $context("boings", rsl::log_level::INHERIT, zoinks = 420, boings = 3, test);
 
-  rsl::fatal_error("from foo");
-  bar();
+  $fatal_error("from foo");
+  bar(420);
 }
 
 int main() {

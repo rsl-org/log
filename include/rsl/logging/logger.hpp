@@ -11,10 +11,10 @@ struct FormatString;
 
 struct Sink {
   virtual ~Sink() = default;
-  
+
   // TODO maybe query interest first to avoid formatting when no sinks are interested?
   // virtual bool is_interested(/* scope */) { return true; }
-  
+
   virtual void emit_event(Context const* ctx, Message const& event) = 0;
   virtual void enter_context(Context const& ctx, bool handover) {}
   virtual void exit_context(Context const& ctx, bool handover) {}
@@ -22,7 +22,7 @@ struct Sink {
 
 struct BasicLogger : Sink {
   std::vector<Sink*> sinks;
-  
+
   explicit BasicLogger(std::vector<Sink*> sinks) : sinks(std::move(sinks)) {}
 
   void emit_event(Context const* ctx, Message const& msg) override {
@@ -42,16 +42,16 @@ struct BasicLogger : Sink {
   }
 };
 
-
 Sink*& default_logger();
 void set_default_logger(Sink* new_logger);
 
 template <LogLevel severity, typename... Args>
-void eager_emitter(Context const* ctx,
+void eager_emitter(rsl::_log_impl::ExtraFields const* fnc_args,
+                   Context const* ctx,
                    _impl::FormatString<severity, Args...> fmt,
                    Args&&... args) {
   auto meta = fmt.make_message(ctx, std::forward<Args>(args)...);
-  
+
   if (auto* logger = default_logger()) {
     logger->emit_event(ctx, meta);
   }
