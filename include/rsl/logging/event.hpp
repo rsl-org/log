@@ -18,17 +18,18 @@ template <LogLevel Level,
           std::meta::info ctx,
           rsl::string_view fmt,
           typename... Args>
-Message make_message(Context const* context, Args&&... args) {
+Message make_message(ExtraFields const* fnc_args, Context const* context, Args&&... args) {
   // TODO expand format string
   return {.severity = Level,
           .sloc     = sloc,
           .span_id  = context ? context->id : 0,
-          .text     = std::format(fmt, args...)};
+          .text     = std::format(fmt, args...),
+          .arguments = fnc_args ? *fnc_args : ExtraFields{}};
 }
 
 template <LogLevel Level, typename... Args>
 struct FormatString {
-  using meta_t        = Message (*)(Context const*, Args&&...);
+  using meta_t        = Message (*)(ExtraFields const*, Context const*, Args&&...);
   meta_t make_message = nullptr;
 
   template <std::meta::info Ctx>

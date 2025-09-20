@@ -50,7 +50,7 @@ void eager_emitter(ExtraFields const* fnc_args,
                    Context const* ctx,
                    _impl::FormatString<severity, Args...> fmt,
                    Args&&... args) {
-  auto meta = fmt.make_message(ctx, std::forward<Args>(args)...);
+  auto meta = fmt.make_message(fnc_args, ctx, std::forward<Args>(args)...);
 
   if (auto* logger = default_logger()) {
     logger->emit_event(ctx, meta);

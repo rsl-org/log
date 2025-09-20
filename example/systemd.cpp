@@ -5,14 +5,15 @@
 
 void bar(int x) {
   rsl::info("from bar");
+
   $info("from bar with context");
+
 }
 
 void foo(int x, char y) {
   int test = 42;
   $context("boings", rsl::log_level::INHERIT, zoinks = 420, boings = 3, test);
-
-  $fatal_error("from foo");
+  $error("from foo: {}", 24);
   bar(420);
 }
 
