@@ -14,12 +14,12 @@ void Context::enter(bool handover) {
   parent          = current_context;
   current_context = this;
   // TODO metadata
-  default_logger()->context(*this, Metadata{}, true, handover);
+  default_logger()->context(Metadata{.context=*this}, true, handover);
 }
 
 void Context::exit(bool handover) {
   // TODO metadata
-  default_logger()->context(*this, Metadata{}, false, handover);
+  default_logger()->context(Metadata{.context=*this}, false, handover);
   if (current_context && current_context->id == id) {
     // fast path - we were are in the current context
     current_context = current_context->parent;

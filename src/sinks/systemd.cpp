@@ -35,19 +35,19 @@ std::string format_name(std::string name, ExtraFields const& arguments) {
 }
 }  // namespace
 
-void SystemdSink::emit_event(Context const& ctx, Event const& event) {
+void SystemdSink::emit_event(Event const& event) {
   std::vector<std::string> fields{"CONTAINER=devcontainer"};
   fields.push_back(std::format("PRIORITY={}", level_to_syslog_level(event.meta.severity)));
   fields.push_back("MESSAGE=" + event.text);
 
-  fields.push_back(std::format("CONTEXT_FILE={}", ctx.sloc.file));
-  fields.push_back(std::format("CONTEXT_LINE={}", ctx.sloc.line));
-  fields.push_back(std::format("CONTEXT_UID={}", ctx.id));
-  fields.push_back(std::format("CONTEXT_NAME={}", ctx.name));
-  fields.push_back("CONTEXT_FUNC=" + format_name(std::string(ctx.sloc.function), ctx.arguments));
+  fields.push_back(std::format("CONTEXT_FILE={}", event.meta.context.sloc.file));
+  fields.push_back(std::format("CONTEXT_LINE={}", event.meta.context.sloc.line));
+  fields.push_back(std::format("CONTEXT_UID={}", event.meta.context.id));
+  fields.push_back(std::format("CONTEXT_NAME={}", event.meta.context.name));
+  fields.push_back("CONTEXT_FUNC=" + format_name(std::string(event.meta.context.sloc.function), event.meta.context.arguments));
 
   std::string func_name = format_name(std::string(event.meta.sloc.function), event.meta.arguments);
-  for (auto const& arg : ctx.extra) {
+  for (auto const& arg : event.meta.context.extra) {
     fields.push_back(std::format("{}={}",
                                  arg.name | std::views::transform([](unsigned char c) {
                                    return static_cast<char>(std::toupper(c));
@@ -68,6 +68,6 @@ void SystemdSink::emit_event(Context const& ctx, Event const& event) {
                                  int(iovecs.size()));
 }
 
-void SystemdSink::enter_context(Context const& ctx, Metadata const& meta, bool handover) {}
-void SystemdSink::exit_context(Context const& ctx, Metadata const& meta, bool handover) {}
+void SystemdSink::enter_context(Metadata const& meta, bool handover) {}
+void SystemdSink::exit_context(Metadata const& meta, bool handover) {}
 }  // namespace rsl::logging

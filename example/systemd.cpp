@@ -20,7 +20,7 @@ void foo(int x, char y) {
 int main() {
   using namespace rsl::logging;
   auto logger = Logger(SystemdSink(), TerminalSink());
-  rsl::logging::set_default_logger(&logger);
+  logger.set_as_default();
   {
     $context("main", rsl::log_level::INFO);
     rsl::info("from main context");

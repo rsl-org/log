@@ -6,6 +6,8 @@
 #endif
 
 #include <cstddef>
+#include <thread>
+#include <chrono>
 
 #include <rsl/source_location>
 
@@ -15,24 +17,20 @@
 
 namespace rsl::logging {
 namespace _impl {
-template <LogLevel Level,
-          rsl::source_location sloc,
-          std::meta::info ctx,
-          rsl::string_view fmt,
-          typename... Args>
-Event make_message(ExtraFields const* fnc_args, Args&&... args) {
+template <rsl::source_location sloc, std::meta::info ctx, rsl::string_view fmt, typename... Args>
+Event make_message(Metadata& meta, Args&&... args) {
+  meta.sloc = sloc;
+
   // TODO expand format string
   return {
-      .meta = {.severity  = Level,
-               .sloc      = sloc,
-               .arguments = fnc_args ? *fnc_args : ExtraFields{}},
+      .meta = meta,
       .text = std::format(fmt, args...),
   };
 }
 
 template <LogLevel Level, typename... Args>
 struct FormatString {
-  using meta_t        = Event (*)(ExtraFields const*, Args&&...);
+  using meta_t        = Event (*)(Metadata&, Args&&...);
   meta_t make_message = nullptr;
 
   template <std::meta::info Ctx>
@@ -40,8 +38,7 @@ struct FormatString {
     if constexpr (Level >= min_level_for(Ctx)) {
       make_message = extract<meta_t>(
           substitute(^^_impl::make_message,
-                     {std::meta::reflect_constant(Level),
-                      std::meta::reflect_constant(sloc),
+                     {std::meta::reflect_constant(sloc),
                       std::meta::reflect_constant(Ctx),
                       std::meta::reflect_constant(rsl::string_view(std::define_static_string(fmt))),
                       ^^Args...}));
@@ -78,7 +75,13 @@ void emit_event(ExtraFields const* fnc_args,
     if (context != nullptr && Level < context->min_level) {
       return;
     }
-    RSL_LOG_EMITTER(fnc_args, context, fmt, std::forward<Args>(args)...);
+    auto meta = Metadata{.severity  = Level,
+                         .timestamp = std::chrono::system_clock::now(),
+                         .thread_id = std::this_thread::get_id(),
+                         .context = context ? *context : Context(),
+                         .arguments = fnc_args ? *fnc_args : ExtraFields{}};
+
+    RSL_LOG_EMITTER(meta, fmt, std::forward<Args>(args)...);
   }
 }
 
