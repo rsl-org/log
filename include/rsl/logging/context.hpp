@@ -1,11 +1,10 @@
 #pragma once
 #include <string>
-#include <string_view>
 #include <coroutine>
 
 #include <rsl/source_location>
 #include <rsl/_impl/consumable.hpp>
-#include "interface.hpp"
+#include "level.hpp"
 #include "field.hpp"
 
 namespace rsl::logging {

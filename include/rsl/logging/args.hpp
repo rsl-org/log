@@ -1,8 +1,8 @@
 #pragma once
-#include <algorithm>
-#include <initializer_list>
 #include <meta>
 #include <ranges>
+
+#include "field.hpp"
 
 namespace rsl::logging {
 namespace _impl {

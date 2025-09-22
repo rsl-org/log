@@ -16,7 +16,7 @@ std::size_t level_to_syslog_level(LogLevel level) {
   }
 }
 
-std::string format_name(std::string name, ExtraFields arguments) {
+std::string format_name(std::string name, ExtraFields const& arguments) {
   if (not arguments.is_empty()) {
     name = name.substr(0, name.find('('));
     name += "(";
@@ -35,19 +35,19 @@ std::string format_name(std::string name, ExtraFields arguments) {
 }
 }  // namespace
 
-void SystemdSink::emit_event(Context const* ctx, Message const& event) {
+void SystemdSink::emit_event(Context const& ctx, Event const& event) {
   std::vector<std::string> fields{"CONTAINER=devcontainer"};
-  fields.push_back(std::format("PRIORITY={}", level_to_syslog_level(event.severity)));
+  fields.push_back(std::format("PRIORITY={}", level_to_syslog_level(event.meta.severity)));
   fields.push_back("MESSAGE=" + event.text);
 
-  fields.push_back(std::format("CONTEXT_FILE={}", ctx->sloc.file));
-  fields.push_back(std::format("CONTEXT_LINE={}", ctx->sloc.line));
-  fields.push_back(std::format("CONTEXT_UID={}", ctx->id));
-  fields.push_back(std::format("CONTEXT_NAME={}", ctx->name));
-  fields.push_back("CONTEXT_FUNC=" + format_name(std::string(ctx->sloc.function), ctx->arguments));
+  fields.push_back(std::format("CONTEXT_FILE={}", ctx.sloc.file));
+  fields.push_back(std::format("CONTEXT_LINE={}", ctx.sloc.line));
+  fields.push_back(std::format("CONTEXT_UID={}", ctx.id));
+  fields.push_back(std::format("CONTEXT_NAME={}", ctx.name));
+  fields.push_back("CONTEXT_FUNC=" + format_name(std::string(ctx.sloc.function), ctx.arguments));
 
-  std::string func_name = format_name(std::string(event.sloc.function), event.arguments);
-  for (auto const& arg : ctx->extra) {
+  std::string func_name = format_name(std::string(event.meta.sloc.function), event.meta.arguments);
+  for (auto const& arg : ctx.extra) {
     fields.push_back(std::format("{}={}",
                                  arg.name | std::views::transform([](unsigned char c) {
                                    return static_cast<char>(std::toupper(c));
@@ -61,14 +61,13 @@ void SystemdSink::emit_event(Context const* ctx, Message const& event) {
     iovecs.emplace_back((void*)field.c_str(), field.size());
   }
 
-  sd_journal_sendv_with_location(std::format("CODE_FILE={}", event.sloc.file).c_str(),
-                                 std::format("CODE_LINE={}", event.sloc.line).c_str(),
+  sd_journal_sendv_with_location(std::format("CODE_FILE={}", event.meta.sloc.file).c_str(),
+                                 std::format("CODE_LINE={}", event.meta.sloc.line).c_str(),
                                  func_name.c_str(),
                                  iovecs.data(),
-                                 iovecs.size());
+                                 int(iovecs.size()));
 }
 
-void SystemdSink::enter_context(Context const& ctx, bool handover) {}
-
-void SystemdSink::exit_context(Context const& ctx, bool handover) {}
+void SystemdSink::enter_context(Context const& ctx, Metadata const& meta, bool handover) {}
+void SystemdSink::exit_context(Context const& ctx, Metadata const& meta, bool handover) {}
 }  // namespace rsl::logging

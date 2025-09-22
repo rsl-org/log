@@ -1,9 +1,9 @@
 #pragma once
-#include "logging/event.hpp"
+#include "logging/formatter.hpp"
 #include "logging/logger.hpp"
 #include "logging/context.hpp"
 
-#include "logging/_impl/args.hpp"
+#include "logging/args.hpp"
 
 #include <kwargs.h>
 

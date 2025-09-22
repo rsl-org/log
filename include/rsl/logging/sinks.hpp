@@ -4,24 +4,24 @@
 #include <print>
 
 namespace rsl::logging {
-class TerminalSink final : public Sink {
-  void emit_event(Context const* ctx, Message const& event) override;
-  void enter_context(Context const& ctx, bool handover) override;
-  void exit_context(Context const& ctx, bool handover) override;
+struct TerminalSink final : Sink {
+  void emit_event(Context const& ctx, Event const& event);
+  void enter_context(Context const& ctx, Metadata const& meta, bool handover);
+  void exit_context(Context const& ctx, Metadata const& meta, bool handover);
 };
 using DefaultSink = TerminalSink;
 
-class FileSink final : public Sink {
-  void emit_event(Context const* ctx, Message const& event) override;
-  void enter_context(Context const& ctx, bool handover) override;
-  void exit_context(Context const& ctx, bool handover) override;
+struct FileSink final : Sink {
+  void emit_event(Context const& ctx, Event const& event);
+  void enter_context(Context const& ctx, Metadata const& meta, bool handover);
+  void exit_context(Context const& ctx, Metadata const& meta, bool handover);
 };
 
 // #if defined(__unix__) && defined(RSL_LOG_SYSTEMD)
-class SystemdSink final : public Sink {
-  void emit_event(Context const* ctx, Message const& event) override;
-  void enter_context(Context const& ctx, bool handover) override;
-  void exit_context(Context const& ctx, bool handover) override;
+struct SystemdSink final : Sink {
+  void emit_event(Context const& ctx, Event const& event);
+  void enter_context(Context const& ctx, Metadata const& meta, bool handover);
+  void exit_context(Context const& ctx, Metadata const& meta, bool handover);
 };
 // #endif
 }  // namespace rsl::loggging

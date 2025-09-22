@@ -1,18 +1,16 @@
 #pragma once
 #include <cstdint>
 #include <type_traits>
-#include <string_view>
 #include <concepts>
-#include <meta>
+#include <string_view>
 
 #include <rsl/meta_traits>
 #include <rsl/source_location>
 
-#include "field.hpp"
-
 namespace rsl::logging {
-enum class LogLevel : std::uint8_t {
+  enum class LogLevel : std::uint8_t {
   INHERIT = 0,
+  CONTEXT = 1,
   TRACE   = 10,
   DEBUG   = 20,
   INFO    = 30,
@@ -50,13 +48,4 @@ consteval LogLevel min_level_for(std::meta::info ctx) {
   return LogLevel::INHERIT;
 }
 
-struct Message {
-  LogLevel severity;
-  rsl::source_location sloc;
-  std::size_t span_id;
-  // thread id
-  // timestamp
-  std::string text;
-  ExtraFields arguments;
-};
-}  // namespace rsl::logging
+}

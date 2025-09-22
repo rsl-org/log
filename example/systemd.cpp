@@ -18,8 +18,8 @@ void foo(int x, char y) {
 }
 
 int main() {
-  auto sink   = rsl::logging::SystemdSink();
-  auto logger = rsl::logging::BasicLogger({&sink});
+  using namespace rsl::logging;
+  auto logger = Logger(SystemdSink(), TerminalSink());
   rsl::logging::set_default_logger(&logger);
   {
     $context("main", rsl::log_level::INFO);

@@ -13,11 +13,13 @@ void Context::enter(bool handover) {
   assert(parent == nullptr);
   parent          = current_context;
   current_context = this;
-  default_logger()->enter_context(*this, handover);
+  // TODO metadata
+  default_logger()->context(*this, Metadata{}, true, handover);
 }
 
 void Context::exit(bool handover) {
-  default_logger()->exit_context(*this, handover);
+  // TODO metadata
+  default_logger()->context(*this, Metadata{}, false, handover);
   if (current_context && current_context->id == id) {
     // fast path - we were are in the current context
     current_context = current_context->parent;
