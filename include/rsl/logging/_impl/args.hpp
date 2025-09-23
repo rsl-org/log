@@ -2,12 +2,13 @@
 #include <meta>
 #include <ranges>
 
-#include "field.hpp"
+#include <rsl/logging/field.hpp>
 
 namespace rsl::logging {
 namespace _impl {
 
 constexpr inline struct Tombstone {
+  constexpr auto operator&() const noexcept { return *this; }
 } tombstone;
 }  // namespace _impl
 
@@ -44,10 +45,7 @@ struct FunctionScope {
 };
 }  // namespace rsl::logging
 
-#define RSL_DUMP_ARGS1(Offset)                             \
-  (Offset < rsl::logging::FunctionScope<>::max_idx       \
-   ? &[:rsl::logging::FunctionScope<>::get(Offset + 0):] \
-   : nullptr)
+#define RSL_DUMP_ARGS1(Offset) &[:rsl::logging::FunctionScope<>::get(Offset):]
 
 #define RSL_DUMP_ARGS4(Offset)                                                    \
   RSL_DUMP_ARGS1(Offset), RSL_DUMP_ARGS1(Offset + 1), RSL_DUMP_ARGS1(Offset + 2), \
@@ -60,11 +58,11 @@ struct FunctionScope {
 #  define RSL_ARGDUMP_COUNT 32
 #endif
 #if RSL_ARGDUMP_COUNT == 64
-#  define RSL_LOG_ARGS                                                 \
+#  define RSL_LOG_ARGS                                               \
     rsl::logging::FunctionScope<>::capture_args(RSL_DUMP_ARGS16(0),  \
-                                                  RSL_DUMP_ARGS16(16), \
-                                                  RSL_DUMP_ARGS16(32), \
-                                                  RSL_DUMP_ARGS16(48))
+                                                RSL_DUMP_ARGS16(16), \
+                                                RSL_DUMP_ARGS16(32), \
+                                                RSL_DUMP_ARGS16(48))
 #elif RSL_ARGDUMP_COUNT == 32
 #  define RSL_LOG_ARGS \
     rsl::logging::FunctionScope<>::capture_args(RSL_DUMP_ARGS16(0), RSL_DUMP_ARGS16(16))

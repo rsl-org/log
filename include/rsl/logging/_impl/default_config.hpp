@@ -1,6 +1,6 @@
 #pragma once
-#include "logger.hpp"
-#include "level.hpp"
+#include <rsl/logging/logger.hpp>
+#include <rsl/logging/level.hpp>
 
 namespace rsl::logging {
 #ifdef RSL_LOG_MIN_LEVEL

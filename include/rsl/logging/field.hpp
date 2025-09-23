@@ -121,7 +121,7 @@ public:
   }
 
   template <typename T>
-    requires(!std::same_as<T, void>)
+    requires(not std::same_as<T, void>)
   Field(std::string_view name, T* value, bool needs_cleanup = false)
       : name(name)
       , type_name(rsl::type_name<T>)
@@ -144,7 +144,7 @@ public:
     }
 
     // checking one function in the table is sufficient to determine equality
-    if (other->vtable->to_string == &_impl::Impl<T>::to_string) {
+    if (other->vtable->to_string != &_impl::Impl<T>::to_string) {
       return nullptr;
     }
     return static_cast<T*>(other->ptr);

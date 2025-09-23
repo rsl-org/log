@@ -8,7 +8,7 @@
 #include <rsl/source_location>
 
 namespace rsl::logging {
-  enum class LogLevel : std::uint8_t {
+enum class LogLevel : std::uint8_t {
   INHERIT = 0,
   CONTEXT = 1,
   TRACE   = 10,
@@ -48,4 +48,4 @@ consteval LogLevel min_level_for(std::meta::info ctx) {
   return LogLevel::INHERIT;
 }
 
-}
+}  // namespace rsl::logging

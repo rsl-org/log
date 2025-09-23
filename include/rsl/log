@@ -1,9 +1,8 @@
 #pragma once
-#include "logging/formatter.hpp"
-#include "logging/logger.hpp"
-#include "logging/context.hpp"
-
-#include "logging/args.hpp"
+#include <rsl/logging/_impl/formatter.hpp>
+#include <rsl/logging/_impl/args.hpp>
+#include <rsl/logging/logger.hpp>
+#include <rsl/logging/context.hpp>
 
 #include <kwargs.h>
 
