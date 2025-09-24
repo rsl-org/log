@@ -27,7 +27,7 @@ std::string format_name(std::string name, ExtraFields const& arguments) {
       } else {
         first = false;
       }
-      name += std::format("{} {}={}", arg.type_name, arg.name, arg.to_repr());
+      name += std::format("{} {}={}", arg.type_name(), arg.name, arg.to_repr());
     }
     name += ")";
   }

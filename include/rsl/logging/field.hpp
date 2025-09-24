@@ -2,10 +2,11 @@
 #include <string>
 #include <format>
 #include <type_traits>
+#include <utility>
 #include <vector>
 #include <meta>
+#include <atomic>
 
-#include <print>
 
 #include <rsl/serialize>
 #include <rsl/repr>
@@ -13,94 +14,124 @@
 #include <kwargs.h>
 
 namespace rsl::logging {
-namespace _impl {
-template <typename T>
-struct Impl {
-  static std::string to_string(void const* p) {
-    return std::format("{}", *static_cast<const T*>(p));
-  }
-  static std::string to_repr(void const* p) { return rsl::repr(*static_cast<const T*>(p)); }
-  static std::string to_json(void const* p) { return ""; }
-
-  static void* clone(void const* p) { return new T(*static_cast<T const*>(p)); }
-  static void destroy(void* p) { delete static_cast<T*>(p); }
-};
-
-struct VTable {
-  std::string (*type_name)(void const*);
-  std::string (*to_string)(void const*);
-  std::string (*to_repr)(void const*);
-  std::string (*to_json)(void const*);
-  void* (*clone)(void const*);
-  void (*destroy)(void* p);
-};
-
-template <typename T>
-constexpr VTable const* make_vtable() {
-  static constexpr VTable table{.to_string = &Impl<T>::to_string,
-                                .to_repr   = &Impl<T>::to_repr,
-                                .to_json   = &Impl<T>::to_json,
-                                .clone     = &Impl<T>::clone,
-                                .destroy   = &Impl<T>::destroy};
-  return &table;
-}
-}  // namespace _impl
-
 class Field {
-  void* ptr                   = nullptr;
-  _impl::VTable const* vtable = nullptr;
+  template <typename T>
+  struct Impl {
+    struct RefCounted {
+      mutable std::atomic_unsigned_lock_free references;
+      T data;
+      std::string name;
 
-  // TODO maybe count references in owning mode?
-  bool owning = false;
+      RefCounted(T obj, std::string_view name) : references(0), data(std::move(obj)), name(name) {}
+      ~RefCounted()                            = default;
+      RefCounted(RefCounted const&)            = delete;
+      RefCounted(RefCounted&&)                 = delete;
+      RefCounted& operator=(RefCounted const&) = delete;
+      RefCounted& operator=(RefCounted&&)      = delete;
+    };
+
+    static std::string to_string(Field const* field) { return std::format("{}", *get(field)); }
+    static std::string to_repr(Field const* field) { return rsl::repr(*get(field)); }
+    static std::string to_json(Field const* field) { return ""; }
+
+    static T* get(Field* field) {
+      if (field->vtable->destroy != nullptr) {
+        return &static_cast<RefCounted*>(field->ptr)->data;
+      } else {
+        return static_cast<T*>(field->ptr);
+      }
+    }
+
+    static T const* get(Field const* field) { return get(const_cast<Field*>(field)); }
+
+    static Field transition(Field const* field) {
+      RefCounted* ref = new RefCounted(*static_cast<T const*>(field->ptr), field->name);
+      return Field(ref, make_vtable<T, true>(), ref->name);
+    }
+
+    static Field clone(Field const* field) {
+      auto const& control_block = *static_cast<RefCounted const*>(field->ptr);
+      // control_block.references++;
+      auto val = control_block.references.fetch_add(1);
+      return Field(field->ptr, field->vtable, field->name);
+    }
+
+    static void destroy(void* p) {
+      auto* control_block = static_cast<RefCounted*>(p);
+      auto val            = control_block->references.fetch_sub(1);
+      if (val == 0) {
+        delete control_block;
+      }
+    }
+  };
+
+  struct VTable {
+    std::string_view type_name;
+
+    std::string (*to_string)(Field const*);
+    std::string (*to_repr)(Field const*);
+    std::string (*to_json)(Field const*);
+    Field (*clone)(Field const*);
+    void (*destroy)(void* p);
+
+    bool is_owning() const { return destroy != nullptr; }
+  };
+
+  template <typename T, bool Heap>
+  constexpr static VTable const* make_vtable() {
+    static constexpr VTable table{.type_name = rsl::type_name<T>,
+                                  .to_string = &Impl<T>::to_string,
+                                  .to_repr   = &Impl<T>::to_repr,
+                                  .to_json   = &Impl<T>::to_json,
+                                  .clone     = Heap ? &Impl<T>::clone : &Impl<T>::transition,
+                                  .destroy   = Heap ? &Impl<T>::destroy : nullptr};
+    return &table;
+  }
+
+  void* ptr                   = nullptr;
+  VTable const* vtable = nullptr;
 
   void destroy() {
-    if (owning) {
+    if (vtable != nullptr && vtable->is_owning()) {
       vtable->destroy(ptr);
     }
     ptr    = nullptr;
-    owning = false;
+    vtable = nullptr;
   }
 
-  Field(void* ptr, _impl::VTable const* vtable, bool owning, std::string_view name, std::string_view type_name)
-  : ptr(ptr)
-  , vtable(vtable)
-  , owning(owning)
-  , name(name)
-  , type_name(type_name) {}
+  Field(void* ptr, VTable const* vtable, std::string_view name)
+      : ptr(ptr)
+      , vtable(vtable)
+      , name(name) {}
+
+  static Field copy_from(Field const& other) {
+    if (other.vtable->destroy != nullptr) {
+      return other.vtable->clone(&other);
+    } else {
+      return {other.ptr, other.vtable, other.name};
+    }
+  }
 
 public:
   std::string_view name;
-  std::string_view type_name;
 
   Field() = default;
-
-  Field(const Field& other)
-      : ptr(other.owning ? other.vtable->clone(other.ptr) : other.ptr)
-      , vtable(other.vtable)
-      , owning(other.owning)
-      , name(other.name)
-      , type_name(other.type_name) {}
+  Field(const Field& other) : Field(copy_from(other)) {}
 
   // move constructor
   Field(Field&& other) noexcept
       : ptr(other.ptr)
       , vtable(other.vtable)
-      , owning(other.owning)
-      , name(other.name)
-      , type_name(other.type_name) {
+      , name(other.name) {
     other.ptr    = nullptr;
-    other.owning = false;
+    other.vtable = nullptr;
   }
 
   // copy assignment
   Field& operator=(const Field& other) {
     if (this != &other) {
       destroy();
-      ptr       = other.owning ? other.vtable->clone(other.ptr) : other.ptr;
-      vtable    = other.vtable;
-      owning    = other.owning;
-      name      = other.name;
-      type_name = other.type_name;
+      *this = copy_from(other);
     }
     return *this;
   }
@@ -109,45 +140,40 @@ public:
   Field& operator=(Field&& other) noexcept {
     if (this != &other) {
       destroy();
-      ptr          = other.ptr;
-      vtable       = other.vtable;
-      owning       = other.owning;
-      name         = other.name;
-      type_name    = other.type_name;
-      other.ptr    = nullptr;
-      other.owning = false;
+      ptr    = std::exchange(other.ptr, nullptr);
+      vtable = std::exchange(other.vtable, nullptr);
+      name   = other.name;
     }
     return *this;
   }
 
   template <typename T>
     requires(not std::same_as<T, void>)
-  Field(std::string_view name, T* value, bool needs_cleanup = false)
-      : name(name)
-      , type_name(rsl::type_name<T>)
-      , ptr(value)
-      , vtable(_impl::make_vtable<T>())
-      , owning(needs_cleanup) {}
+  Field(std::string_view name, T* value)
+      : ptr(value)
+      , vtable(make_vtable<T, false>())
+      , name(name) {}
 
-  ~Field() noexcept {
-    destroy();
-  }
+  ~Field() noexcept { destroy(); }
 
   [[nodiscard]] Field clone() const {
-    return Field(ptr ? vtable->clone(ptr) : nullptr, vtable, true, name, type_name);
+    if (vtable == nullptr || ptr == nullptr) {
+      return {};
+    }
+    return vtable->clone(this);
   }
 
   template <class T>
-  friend T* any_cast(Field* other) noexcept {
-    if (!other || !other->ptr) {
+  friend T* any_cast(Field* field) noexcept {
+    if (!field || !field->ptr) {
       return nullptr;
     }
 
     // checking one function in the table is sufficient to determine equality
-    if (other->vtable->to_string != &_impl::Impl<T>::to_string) {
+    if (field->vtable->to_string != &Impl<T>::to_string) {
       return nullptr;
     }
-    return static_cast<T*>(other->ptr);
+    return Impl<T>::get(field);
   }
 
   template <typename T, typename U>
@@ -160,16 +186,18 @@ public:
     }
   }
 
-  [[nodiscard]] std::string to_string() const { return vtable->to_string(ptr); }
-  [[nodiscard]] std::string to_json() const { return vtable->to_json(ptr); }
-  [[nodiscard]] std::string to_repr() const { return vtable->to_repr(ptr); }
+  [[nodiscard]] std::string_view type_name() const { return vtable->type_name; }
+  [[nodiscard]] std::string to_string() const { return vtable->to_string(this); }
+  [[nodiscard]] std::string to_json() const { return vtable->to_json(this); }
+  [[nodiscard]] std::string to_repr() const { return vtable->to_repr(this); }
 };
 
 struct ExtraFields {
+  //TODO this could be a span that views memory on the stack and transitions to heap if its elts do
   std::vector<Field> fields;
 
   ExtraFields() = default;
-  explicit(false) ExtraFields(std::vector<Field> fields) : fields(fields) {}
+  explicit(false) ExtraFields(std::vector<Field> fields) : fields(std::move(fields)) {}
   template <typename T>
     requires is_kwargs<std::remove_cvref_t<T>>
   explicit(false) ExtraFields(T&& kwargs) {
@@ -215,4 +243,4 @@ struct ExtraFields {
   }
 };
 
-}  // namespace rsl::_log_impl
+}  // namespace rsl::logging
