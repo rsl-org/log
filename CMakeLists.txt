@@ -20,9 +20,6 @@ target_include_directories(rsl-log PUBLIC
 find_package(rsl-util REQUIRED)
 target_link_libraries(rsl-log PUBLIC rsl::util)
 
-find_package(kwargs REQUIRED)
-target_link_libraries(rsl-log PUBLIC kwargs::kwargs)
-
 add_subdirectory(src)
 
 install(TARGETS rsl-log)

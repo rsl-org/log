@@ -10,6 +10,7 @@
 #include <chrono>
 
 #include <rsl/source_location>
+#include <rsl/format>
 
 #include <rsl/logging/event.hpp>
 #include <rsl/logging/context.hpp>
@@ -18,17 +19,13 @@
 namespace rsl::logging {
 namespace _impl {
 template <rsl::string_view fmt, typename... Args>
-Event make_message(Metadata& meta, Args&&... args) {
-  // TODO expand format string
-  return {
-      .meta = meta,
-      .text = std::format(fmt, args...),
-  };
+format_result make_message(Args&&... args) {
+  return ::rsl::format(fmt, args...);
 }
 
 template <LogLevel Level, typename... Args>
 struct FormatString {
-  using meta_t        = Event (*)(Metadata&, Args&&...);
+  using meta_t        = format_result (*)(Args&&...);
   meta_t make_message = nullptr;
 
   rsl::source_location sloc;

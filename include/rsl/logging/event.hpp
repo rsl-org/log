@@ -2,6 +2,7 @@
 #include <thread>
 #include <chrono>
 
+#include <rsl/format>
 #include <rsl/meta_traits>
 #include <rsl/source_location>
 
@@ -24,7 +25,7 @@ struct Metadata {
 
 struct Event {
   Metadata meta;
-  std::string text;
+  format_result text;
 
   //[[=getter]]
   std::uint64_t unix_timestamp() const {

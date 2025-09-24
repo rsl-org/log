@@ -11,8 +11,6 @@
 #include <rsl/serialize>
 #include <rsl/repr>
 
-#include <kwargs.h>
-
 namespace rsl::logging {
 class Field {
   template <typename T>
@@ -199,7 +197,7 @@ struct ExtraFields {
   ExtraFields() = default;
   explicit(false) ExtraFields(std::vector<Field> fields) : fields(std::move(fields)) {}
   template <typename T>
-    requires is_kwargs<std::remove_cvref_t<T>>
+    requires std::is_aggregate_v<std::remove_cvref_t<T>>
   explicit(false) ExtraFields(T&& kwargs) {
     template for (constexpr auto member : std::define_static_array(
                       nonstatic_data_members_of(^^typename std::remove_cvref_t<T>::type,

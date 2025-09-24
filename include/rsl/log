@@ -4,12 +4,14 @@
 #include <rsl/logging/logger.hpp>
 #include <rsl/logging/context.hpp>
 
-#include <kwargs.h>
-
-#define RSL_LOG_EXTRA(...) make_args(__VA_ARGS__)
-
+#ifdef RSL_KWARGS
+// #include <kwargs.h>
 #define RSL_LOG_CONTEXT(name, level, ...) \
-  rsl::log::context_guard _(name, level, RSL_LOG_ARGS, RSL_LOG_EXTRA(__VA_ARGS__))
+  rsl::log::context_guard _(name, level, RSL_LOG_ARGS, make_args(__VA_ARGS__))
+#else
+#define RSL_LOG_CONTEXT(name, level, ...) \
+  rsl::log::context_guard _(name, level, RSL_LOG_ARGS)
+#endif
 
 #define RSL_TRACE(...)                                                          \
   (void)(::rsl::logging::LogLevel::TRACE >= ::rsl::logging::global_min_level && \

@@ -24,10 +24,7 @@ struct Sink : Filter {
   // void exit_context(Metadata const& meta, bool handover) {}
 
   template <typename T>
-  bool process_context(this T&& self,
-                       Metadata const& meta,
-                       bool entered,
-                       bool async_handover) {
+  bool process_context(this T&& self, Metadata const& meta, bool entered, bool async_handover) {
     if (entered) {
       if constexpr (requires { self.enter_context(meta, async_handover); }) {
         self.enter_context(meta, async_handover);
@@ -51,11 +48,9 @@ struct Sink : Filter {
 };
 
 struct LoggerBase {
-  virtual ~LoggerBase()                                  = default;
-  virtual void context(Metadata const& meta,
-                       bool entered,
-                       bool async_handover)              = 0;
-  virtual void emit(Event const& ev) = 0;
+  virtual ~LoggerBase()                                                         = default;
+  virtual void context(Metadata const& meta, bool entered, bool async_handover) = 0;
+  virtual void emit(Event const& ev)                                            = 0;
 };
 
 LoggerBase*& default_logger();
@@ -69,9 +64,7 @@ struct Logger final
     requires((std::same_as<std::remove_cvref_t<Us>, std::remove_cvref_t<Ts>> && ...))
   explicit Logger(Us&&... values) : Any<Ts...>(std::forward<Us>(values)...) {}
 
-  void context(Metadata const& meta,
-               bool entered,
-               bool async_handover) override {
+  void context(Metadata const& meta, bool entered, bool async_handover) override {
     Any<Ts...>::process_context(meta, entered, async_handover);
   }
 
@@ -87,12 +80,9 @@ template <typename... Ts>
 Logger(Ts&&...) -> Logger<Ts...>;
 
 template <LogLevel Severity, typename... Args>
-void eager_emitter(Metadata& meta,
-                   _impl::FormatString<Severity, Args...> fmt,
-                   Args&&... args) {
-
-  auto event = fmt.make_message(meta, std::forward<Args>(args)...);
-
+void eager_emitter(Metadata& meta, _impl::FormatString<Severity, Args...> fmt, Args&&... args) {
+  auto message = fmt.make_message(std::forward<Args>(args)...);
+  auto event   = Event{.meta = meta, .text = message};
   if (auto* logger = default_logger()) {
     logger->emit(event);
   }

@@ -38,7 +38,7 @@ std::string format_name(std::string name, ExtraFields const& arguments) {
 void SystemdSink::emit_event(Event const& event) {
   std::vector<std::string> fields{"CONTAINER=devcontainer"};
   fields.push_back(std::format("PRIORITY={}", level_to_syslog_level(event.meta.severity)));
-  fields.push_back("MESSAGE=" + event.text);
+  fields.push_back("MESSAGE=" + std::string(event.text));
 
   fields.push_back(std::format("CONTEXT_FILE={}", event.meta.context.sloc.file));
   fields.push_back(std::format("CONTEXT_LINE={}", event.meta.context.sloc.line));

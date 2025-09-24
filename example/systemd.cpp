@@ -12,7 +12,7 @@ void bar(int x) {
 
 void foo(int x, char y) {
   int test = 42;
-  $context("boings", rsl::log_level::INHERIT, zoinks = 420, boings = 3, test);
+  $context("boings", rsl::log_level::INHERIT);
   $error("from foo: {}", 24);
   bar(420);
 }
