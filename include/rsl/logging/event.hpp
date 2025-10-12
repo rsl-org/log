@@ -5,6 +5,7 @@
 #include <rsl/format>
 #include <rsl/meta_traits>
 #include <rsl/source_location>
+#include <rsl/utility>
 
 #include "level.hpp"
 #include "context.hpp"
@@ -27,7 +28,7 @@ struct Event {
   Metadata meta;
   format_result text;
 
-  //[[=getter]]
+  [[=getter]]
   std::uint64_t unix_timestamp() const {
     return static_cast<std::uint64_t>(
         std::chrono::duration_cast<std::chrono::milliseconds>(meta.timestamp.time_since_epoch())

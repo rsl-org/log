@@ -17,9 +17,16 @@ void foo(int x, char y) {
   bar(420);
 }
 
+
 int main() {
   using namespace rsl::logging;
-  auto logger = Logger(SystemdSink(), TerminalSink());
+  auto error_sink = TerminalSink();
+  auto logger = Logger(
+    // SystemdSink(), 
+    TerminalSink(),
+    filter(event->severity >= rsl::log_level::ERROR) >> error_sink,
+    filter([](auto const& event){ return event.severity >= rsl::log_level::ERROR; }) >> error_sink
+  );
   logger.set_as_default();
   {
     $context("main", rsl::log_level::INFO);

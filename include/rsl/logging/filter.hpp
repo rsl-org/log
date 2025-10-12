@@ -5,6 +5,7 @@
 
 #include "event.hpp"
 #include "context.hpp"
+#include <rsl/expect>
 
 namespace rsl::logging {
 template <typename... Ts>
@@ -164,4 +165,16 @@ struct FilterFnc : Filter {
 };
 template <typename F>
 FilterFnc(F&&) -> FilterFnc<F>;
+
+template <rsl::_expect_impl::is_expr_tree F>
+auto filter(F&& fnc) {
+  return FilterFnc(expect(std::forward<F>(fnc)));
+}
+
+template <typename F>
+auto filter(F&& fnc) {
+  return FilterFnc(std::forward<F>(fnc));
+}
+
+constexpr inline auto event = rsl::typed_placeholders::_0<Metadata>;
 }  // namespace rsl::logging
