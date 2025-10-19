@@ -9,7 +9,7 @@ LoggerBase* get_default_logger() {
 }
 }  // namespace
 
-LoggerBase*& DefaultLogger::current_output() {
+LoggerBase*& DefaultLogger::output() {
   static LoggerBase* current = get_default_logger();
   return current;
 }

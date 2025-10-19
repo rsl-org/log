@@ -12,8 +12,8 @@ struct AsyncLogger : DefaultLogger {
   template <LogLevel Severity, typename... Args>
   void emit(Metadata& meta, _impl::FormatString<Severity, Args...> fmt, Args&&... args) {
     auto formatter = fmt.make_message;
-    // serialize metadata
     // serialize formatter
+    // serialize metadata
     // serialize arguments
     // submit to message queue
   }

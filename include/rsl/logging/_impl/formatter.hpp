@@ -65,7 +65,7 @@ void emit_event(ExtraFields const* fnc_args,
                 FormatString<Level, Args...> fmt,
                 Args&&... args) {
   // we've already checked against global_min_level in FormatString's ctor
-  // do it again here to avoid instantiating GlobalLogger::emit
+  // do it again here to avoid instantiating `emit`
   if constexpr (Level >= global_min_level) {
     // check context level override
     if (context != nullptr && Level < context->min_level) {
@@ -78,7 +78,6 @@ void emit_event(ExtraFields const* fnc_args,
                          .arguments = fnc_args ? *fnc_args : ExtraFields{},
                          .sloc      = fmt.sloc};
 
-    // RSL_LOG_EMITTER(meta, fmt, std::forward<Args>(args)...);
     selected_logger<Empty...>.emit(meta, fmt, std::forward<Args>(args)...);
   }
 }

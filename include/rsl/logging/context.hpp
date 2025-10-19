@@ -81,13 +81,13 @@ private:
 
 extern thread_local Context* current_context;
 
-template <typename T>
+template <typename T = std::monostate>
 struct ContextGuard : private Context {
   T extra;
 
   explicit ContextGuard(std::string name,
                         LogLevel min_level,
-                        T extra,
+                        T extra = {},
                         ExtraFields arguments            = {},
                         rsl::source_location const& sloc = std::source_location::current())
       : Context(name, min_level, arguments, {}, sloc) {
@@ -104,6 +104,7 @@ struct ContextGuard : private Context {
 
   using Context::enabled_for;
 };
+
 
 namespace _log_impl {
 template <typename T>

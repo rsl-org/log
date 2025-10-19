@@ -28,7 +28,7 @@ int main() {
     // SystemdSink(), 
     TerminalSink(),
     filter(event->severity >= rsl::log_level::ERROR) >> error_sink,
-    filter([](auto const& event){ return event.severity >= rsl::log_level::ERROR; }) >> error_sink
+    filter([](auto const& ev){ return ev.severity >= rsl::log_level::ERROR; }) >> error_sink
   );
   logger.set_as_default();
   // set_output(logger);
