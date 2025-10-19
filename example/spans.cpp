@@ -3,7 +3,8 @@
 using enum rsl::logging::LogLevel;
 
 void bar() {
-  rsl::logging::ContextGuard context{"bar", INFO};
+  // TODO
+  rsl::logging::ContextGuard context{"bar", INFO, std::monostate()};
   rsl::info("from bar");
 }
 

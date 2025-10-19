@@ -15,6 +15,7 @@
 #include <rsl/logging/event.hpp>
 #include <rsl/logging/context.hpp>
 #include <rsl/logging/field.hpp>
+#include <rsl/logging/logger.hpp>
 
 namespace rsl::logging {
 namespace _impl {
@@ -41,17 +42,16 @@ struct FormatString {
   }
   using initialize_t = void (FormatString::*)(std::string_view, rsl::source_location);
 
+  template <typename T>  //, typename... Empty>
+    requires std::convertible_to<T const&, std::string_view>
   consteval explicit(false)
-      FormatString(std::convertible_to<std::string_view> auto const& fmt,
+      FormatString(T const& fmt,
                    rsl::source_location sloc = std::source_location::current(),
                    std::meta::info ctx       = std::meta::access_context::current().scope())
-    : sloc(sloc) {
-    // avoid instantiating make_message if this is ignored anyway
-    if constexpr (Level >= global_min_level) {
-      auto initializer =
-          extract<initialize_t>(substitute(^^maybe_initialize, {reflect_constant(ctx)}));
-      (this->*initializer)(std::string_view(fmt), sloc);
-    }
+      : sloc(sloc) {
+    auto initializer =
+        extract<initialize_t>(substitute(^^maybe_initialize, {reflect_constant(ctx)}));
+    (this->*initializer)(std::string_view(fmt), sloc);
   }
 };
 }  // namespace _impl
@@ -59,7 +59,7 @@ struct FormatString {
 template <LogLevel S, typename... Args>
 using FormatString = _impl::FormatString<S, std::type_identity_t<Args>...>;
 
-template <LogLevel Level, typename... Args>
+template <LogLevel Level, typename... Empty, typename... Args>
 void emit_event(ExtraFields const* fnc_args,
                 Context const* context,
                 FormatString<Level, Args...> fmt,
@@ -74,11 +74,12 @@ void emit_event(ExtraFields const* fnc_args,
     auto meta = Metadata{.severity  = Level,
                          .timestamp = std::chrono::system_clock::now(),
                          .thread_id = std::this_thread::get_id(),
-                         .context = context ? *context : Context(),
+                         .context   = context ? *context : Context(),
                          .arguments = fnc_args ? *fnc_args : ExtraFields{},
-                         .sloc = fmt.sloc};
+                         .sloc      = fmt.sloc};
 
-    RSL_LOG_EMITTER(meta, fmt, std::forward<Args>(args)...);
+    // RSL_LOG_EMITTER(meta, fmt, std::forward<Args>(args)...);
+    selected_logger<Empty...>.emit(meta, fmt, std::forward<Args>(args)...);
   }
 }
 

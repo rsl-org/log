@@ -2,17 +2,16 @@
 #include <rsl/logging/sinks.hpp>
 
 namespace rsl::logging {
+namespace {
 LoggerBase* get_default_logger() {
-  static auto logger = Logger(TerminalSink());
+  static auto logger = Output(TerminalSink());
   return &logger;
 }
+}  // namespace
 
-LoggerBase*& default_logger() {
+LoggerBase*& DefaultLogger::current_output() {
   static LoggerBase* current = get_default_logger();
   return current;
 }
 
-void set_default_logger(LoggerBase* new_logger) {
-  default_logger() = new_logger;
-}
 }  // namespace rsl::logging

@@ -4,32 +4,34 @@
 #include <rsl/logging/logger.hpp>
 #include <rsl/logging/context.hpp>
 
+#include <utility>
+
 #ifdef RSL_KWARGS
 // #include <kwargs.h>
-#define RSL_LOG_CONTEXT(name, level, ...) \
-  rsl::log::context_guard _(name, level, RSL_LOG_ARGS, make_args(__VA_ARGS__))
+#  define RSL_LOG_CONTEXT(name, level, ...) \
+    rsl::log::context_guard _(name, level, make_args(__VA_ARGS__), RSL_LOG_ARGS)
 #else
-#define RSL_LOG_CONTEXT(name, level, ...) \
-  rsl::log::context_guard _(name, level, RSL_LOG_ARGS)
+#  define RSL_LOG_CONTEXT(name, level, ...) \
+    rsl::log::context_guard<std::monostate> _(name, level, std::monostate(), RSL_LOG_ARGS)
 #endif
 
-#define RSL_TRACE(...)                                                          \
-  (void)(::rsl::logging::LogLevel::TRACE >= ::rsl::logging::global_min_level && \
+#define RSL_TRACE(...)                                      \
+  (void)(is_enabled_for(::rsl::logging::LogLevel::TRACE) && \
          (::rsl::trace(RSL_LOG_ARGS, __VA_ARGS__), true))
-#define RSL_DEBUG(...)                                                          \
-  (void)(::rsl::logging::LogLevel::DEBUG >= ::rsl::logging::global_min_level && \
+#define RSL_DEBUG(...)                                      \
+  (void)(is_enabled_for(::rsl::logging::LogLevel::DEBUG) && \
          (::rsl::debug(RSL_LOG_ARGS, __VA_ARGS__), true))
-#define RSL_INFO(...)                                                          \
-  (void)(::rsl::logging::LogLevel::INFO >= ::rsl::logging::global_min_level && \
+#define RSL_INFO(...)                                      \
+  (void)(is_enabled_for(::rsl::logging::LogLevel::INFO) && \
          (::rsl::info(RSL_LOG_ARGS, __VA_ARGS__), true))
-#define RSL_WARN(...)                                                             \
-  (void)(::rsl::logging::LogLevel::WARNING >= ::rsl::logging::global_min_level && \
+#define RSL_WARN(...)                                         \
+  (void)(is_enabled_for(::rsl::logging::LogLevel::WARNING) && \
          (::rsl::warn(RSL_LOG_ARGS, __VA_ARGS__), true))
-#define RSL_ERROR(...)                                                          \
-  (void)(::rsl::logging::LogLevel::ERROR >= ::rsl::logging::global_min_level && \
+#define RSL_ERROR(...)                                      \
+  (void)(is_enabled_for(::rsl::logging::LogLevel::ERROR) && \
          (::rsl::error(RSL_LOG_ARGS, __VA_ARGS__), true))
-#define RSL_FATAL_ERROR(...)                                                    \
-  (void)(::rsl::logging::LogLevel::FATAL >= ::rsl::logging::global_min_level && \
+#define RSL_FATAL_ERROR(...)                                \
+  (void)(is_enabled_for(::rsl::logging::LogLevel::FATAL) && \
          (::rsl::fatal_error(RSL_LOG_ARGS, __VA_ARGS__), true))
 
 #ifdef RSL_DOLLAR_MACROS
@@ -45,8 +47,9 @@
 
 namespace rsl {
 namespace log {
-using context       = logging::Context;
-using context_guard = logging::ContextGuard;
+using context = logging::Context;
+template <typename T = std::monostate>
+using context_guard = logging::ContextGuard<T>;
 }  // namespace log
 
 // annotation

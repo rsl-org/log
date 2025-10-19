@@ -8,6 +8,9 @@
 #include "field.hpp"
 
 namespace rsl::logging {
+struct Context;
+template <typename... Empty>
+void emit_context(Context const& meta, bool entered, bool async_handover);
 
 struct RSL_CONSUMABLE(unconsumed) Context {
   Context* parent    = nullptr;
@@ -23,8 +26,8 @@ struct RSL_CONSUMABLE(unconsumed) Context {
   RSL_RETURN_TYPESTATE(unconsumed)
   Context(std::string name,
           LogLevel min_level,
-          ExtraFields arguments = {},
-          ExtraFields extra     = {},
+          ExtraFields arguments            = {},
+          ExtraFields extra                = {},
           rsl::source_location const& sloc = std::source_location::current())
       : min_level(min_level)
       , id(next_id())
@@ -49,27 +52,47 @@ struct RSL_CONSUMABLE(unconsumed) Context {
   static std::size_t next_id();
   static Context* get_default();
 
+  template <typename... E>
+  RSL_CALLABLE_WHEN(unconsumed)
+  RSL_SET_TYPESTATE(consumed) void enter(bool handover = false) {
+    activate();
+    emit_context<E...>(*this, true, handover);
+  }
+
+  template <typename... E>
+  RSL_CALLABLE_WHEN(consumed)
+  RSL_SET_TYPESTATE(unconsumed) void exit(bool handover = false) {
+    if (deactivate()) {
+      emit_context<E...>(*this, false, handover);
+    }
+  }
+
+  [[nodiscard]] bool enabled_for(LogLevel level) const;
+
+private:
   RSL_CALLABLE_WHEN(unconsumed)
   RSL_SET_TYPESTATE(consumed)
-  void enter(bool handover = false);
+  void activate();
 
   RSL_CALLABLE_WHEN(consumed)
   RSL_SET_TYPESTATE(unconsumed)
-  void exit(bool handover = false);
-
-  [[nodiscard]] bool enabled_for(LogLevel level) const;
+  bool deactivate();
 };
 
 extern thread_local Context* current_context;
 
+template <typename T>
 struct ContextGuard : private Context {
+  T extra;
+
   explicit ContextGuard(std::string name,
                         LogLevel min_level,
-                        ExtraFields arguments = {},
-                        ExtraFields extra     = {},
+                        T extra,
+                        ExtraFields arguments            = {},
                         rsl::source_location const& sloc = std::source_location::current())
-      : Context(name, min_level, arguments, extra, sloc) {
-    enter();
+      : Context(name, min_level, arguments, {}, sloc) {
+    // TODO bind T as ExtraFields
+    enter<T>();
   }
 
   ContextGuard(ContextGuard const&)            = delete;
@@ -77,7 +100,7 @@ struct ContextGuard : private Context {
   ContextGuard& operator=(ContextGuard const&) = delete;
   ContextGuard& operator=(ContextGuard&&)      = delete;
 
-  ~ContextGuard() { exit(); }
+  ~ContextGuard() { exit<T>(); }
 
   using Context::enabled_for;
 };
@@ -114,12 +137,12 @@ struct AwaiterWrapper {
   decltype(auto) await_suspend(H h) noexcept(noexcept(to_awaiter(original).await_suspend(h))) {
     promise->saved_span    = Context{current_context->name, current_context->min_level};
     promise->saved_span.id = current_context->id;
-    current_context->exit(true);
+    current_context->exit<Awaitable>(true);
     return to_awaiter(original).await_suspend(h);
   }
 
   decltype(auto) await_resume() noexcept(noexcept(to_awaiter(original).await_resume())) {
-    promise->saved_span.enter(true);
+    promise->saved_span.template enter<Awaitable>(true);
     return to_awaiter(original).await_resume();
   }
 };

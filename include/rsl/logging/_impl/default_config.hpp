@@ -1,6 +1,9 @@
 #pragma once
 #include <rsl/logging/logger.hpp>
 #include <rsl/logging/level.hpp>
+#include <rsl/logging/event.hpp>
+
+#include "util.hpp"
 
 namespace rsl::logging {
 #ifdef RSL_LOG_MIN_LEVEL
@@ -12,11 +15,25 @@ constexpr inline LogLevel global_min_level = [] {
 constexpr inline LogLevel global_min_level = LogLevel::INFO;
 #endif
 
-#ifdef RSL_LOG_LAZY
-#define RSL_LOG_EMITTER rsl::logging::lazy_emitter
-#endif
+consteval bool is_enabled_for(LogLevel level) {
+  return level >= global_min_level;
+}
 
-#ifndef RSL_LOG_EMITTER
-#define RSL_LOG_EMITTER rsl::logging::eager_emitter
-#endif
+template <typename...>
+constexpr inline auto selected_logger = DefaultLogger();
+
+template <typename... Empty, typename... Sinks>
+void set_output(Output<Sinks...>& sinks){
+  static_assert(
+      requires { selected_logger<Empty...>.set_output(sinks); },
+      "Selected logger does not support dynamically configuring output");
+  selected_logger<Empty...>.set_output(sinks);
+}
+
+template <typename... Empty>
+void emit_context(Context const& ctx, bool entered, bool async_handover) {
+  // ensure pack is empty
+  rsl::_log_impl::customization<^^selected_logger, Empty...>.context(Metadata{.context=ctx}, entered, async_handover);
+}
+
 }  // namespace rsl::logging

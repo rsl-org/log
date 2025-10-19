@@ -53,16 +53,19 @@ struct LoggerBase {
   virtual void emit(Event const& ev)                                            = 0;
 };
 
-LoggerBase*& default_logger();
-void set_default_logger(LoggerBase* new_logger);
+template <typename... Ts>
+struct Output;
+
+template <typename... Empty, typename... Sinks>
+void set_output(Output<Sinks...>& sinks);
 
 template <typename... Ts>
-struct Logger final
+struct Output final
     : LoggerBase
     , Any<Ts...> {
   template <typename... Us>
     requires((std::same_as<std::remove_cvref_t<Us>, std::remove_cvref_t<Ts>> && ...))
-  explicit Logger(Us&&... values) : Any<Ts...>(std::forward<Us>(values)...) {}
+  explicit Output(Us&&... values) : Any<Ts...>(std::forward<Us>(values)...) {}
 
   void context(Metadata const& meta, bool entered, bool async_handover) override {
     Any<Ts...>::process_context(meta, entered, async_handover);
@@ -70,21 +73,44 @@ struct Logger final
 
   void emit(Event const& ev) override { Any<Ts...>::process_event(ev); }
 
-  void set_as_default() { set_default_logger(this); }
-
-  ~Logger() override {
-    // replace current logger with default logger if this is the current one
-  }
+  void set_as_default() && = delete;
+  void set_as_default() & { set_output(*this); }
 };
 template <typename... Ts>
-Logger(Ts&&...) -> Logger<Ts...>;
+Output(Ts&&...) -> Output<Ts...>;
 
-template <LogLevel Severity, typename... Args>
-void eager_emitter(Metadata& meta, _impl::FormatString<Severity, Args...> fmt, Args&&... args) {
-  auto message = fmt.make_message(std::forward<Args>(args)...);
-  auto event   = Event{.meta = meta, .text = message};
-  if (auto* logger = default_logger()) {
-    logger->emit(event);
+struct NullLogger {
+  constexpr static auto min_level = LogLevel::DISABLE;
+
+  void context(Metadata const& meta, bool entered, bool async_handover) const {}
+
+  template <LogLevel Severity, typename... Args>
+  void emit(Metadata& meta, _impl::FormatString<Severity, Args...> fmt, Args&&... args) const {}
+};
+
+struct DefaultLogger {
+  constexpr static auto min_level = LogLevel::INFO;
+
+  void context(Metadata const& meta, bool entered, bool async_handover) const {
+    if (auto* logger = current_output()) {
+      logger->context(meta, entered, async_handover);
+    }
   }
-}
+
+  template <LogLevel Severity, typename... Args>
+  void emit(Metadata& meta, _impl::FormatString<Severity, Args...> fmt, Args&&... args) const {
+    auto message = fmt.make_message(std::forward<Args>(args)...);
+    auto event   = Event{.meta = meta, .text = message};
+    if (auto* logger = current_output()) {
+      logger->emit(event);
+    }
+  }
+
+  static LoggerBase*& current_output();
+  template <typename... Sinks>
+  static void set_output(Output<Sinks...>& logger) {
+    current_output() = &logger;
+  }
+};
+
 }  // namespace rsl::logging

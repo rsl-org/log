@@ -9,34 +9,29 @@
 namespace rsl::logging {
 thread_local Context* current_context = Context::get_default();
 
-void Context::enter(bool handover) {
+void Context::activate() {
   assert(parent == nullptr);
   parent          = current_context;
   current_context = this;
-  // TODO metadata
-  default_logger()->context(Metadata{.context=*this}, true, handover);
 }
 
-void Context::exit(bool handover) {
-  // TODO metadata
-  default_logger()->context(Metadata{.context=*this}, false, handover);
+bool Context::deactivate() {
   if (current_context && current_context->id == id) {
     // fast path - we were are in the current context
     current_context = current_context->parent;
     parent          = nullptr;
-    return;
+    return true;
   }
 
   for (Context* current = current_context; current != nullptr && current->parent; current = current->parent) {
     if (current->parent->id == id) {
       current->parent = current->parent->parent;
       parent          = nullptr;
-      return;
+      return true;
     }
   }
 
-  // TODO throw?
-  std::unreachable();
+  return false;
 }
 
 bool Context::enabled_for(LogLevel level) const {
