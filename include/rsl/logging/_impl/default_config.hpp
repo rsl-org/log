@@ -12,7 +12,11 @@ constexpr inline LogLevel global_min_level = [] {
   return parse_min_level(RSL_LOG_MIN_LEVEL);
 }();
 #else
+#ifdef NDEBUG
 constexpr inline LogLevel global_min_level = LogLevel::INFO;
+#else
+constexpr inline LogLevel global_min_level = LogLevel::DEBUG;
+#endif
 #endif
 
 consteval bool is_enabled_for(LogLevel level) {
