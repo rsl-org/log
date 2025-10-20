@@ -33,7 +33,7 @@ int main() {
   logger.set_as_default();
   // set_output(logger);
   {
-    $context("main", rsl::log_level::INFO);
+    $context("main", rsl::log_level::INFO, foo=123);
     rsl::info("from main context");
     foo(42, 'c');
   }

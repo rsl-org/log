@@ -47,8 +47,8 @@ struct Sink : Filter {
   }
 };
 
-struct LoggerBase {
-  virtual ~LoggerBase()                                                         = default;
+struct OutputBase {
+  virtual ~OutputBase()                                                         = default;
   virtual void context(Metadata const& meta, bool entered, bool async_handover) = 0;
   virtual void emit(Event const& ev)                                            = 0;
 };
@@ -61,7 +61,7 @@ void set_output(Output<Sinks...>& sinks);
 
 template <typename... Ts>
 struct Output final
-    : LoggerBase
+    : OutputBase
     , Any<Ts...> {
   template <typename... Us>
     requires((std::same_as<std::remove_cvref_t<Us>, std::remove_cvref_t<Ts>> && ...))
@@ -88,8 +88,8 @@ struct NullLogger {
 
 struct DefaultLogger {
   static void context(Metadata const& meta, bool entered, bool async_handover) {
-    if (auto* logger = output()) {
-      logger->context(meta, entered, async_handover);
+    if (auto* output = current_output()) {
+      output->context(meta, entered, async_handover);
     }
   }
 
@@ -97,16 +97,17 @@ struct DefaultLogger {
   static void emit(Metadata& meta, _impl::FormatString<Severity, Args...> fmt, Args&&... args) {
     auto message = fmt.make_message(std::forward<Args>(args)...);
     auto event   = Event{.meta = meta, .text = message};
-    if (auto* logger = output()) {
-      logger->emit(event);
+    if (auto* output = current_output()) {
+      output->emit(event);
     }
   }
 
-  static LoggerBase*& output();
-  template <typename... Sinks>
-  static void set_output(Output<Sinks...>& logger) {
-    output() = &logger;
+  static void set_output(OutputBase& output) {
+    current_output() = &output;
   }
+
+private:
+  static OutputBase*& current_output();
 };
 
 }  // namespace rsl::logging

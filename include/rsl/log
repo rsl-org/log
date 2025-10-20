@@ -6,14 +6,10 @@
 
 #include <utility>
 
-#ifdef RSL_KWARGS
-// #include <kwargs.h>
+#include <rsl/kwargs>
 #  define RSL_LOG_CONTEXT(name, level, ...) \
-    rsl::log::context_guard _(name, level, make_args(__VA_ARGS__), RSL_LOG_ARGS)
-#else
-#  define RSL_LOG_CONTEXT(name, level, ...) \
-    rsl::log::context_guard<std::monostate> _(name, level, std::monostate(), RSL_LOG_ARGS)
-#endif
+    rsl::log::context_guard _(name, level, RSL_LOG_ARGS, RSL_KWARGS(__VA_ARGS__))
+
 
 #define RSL_TRACE(...)                                      \
   (void)(is_enabled_for(::rsl::logging::LogLevel::TRACE) && \

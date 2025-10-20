@@ -3,14 +3,14 @@
 
 namespace rsl::logging {
 namespace {
-LoggerBase* get_default_logger() {
+OutputBase* get_default_logger() {
   static auto logger = Output(TerminalSink());
   return &logger;
 }
 }  // namespace
 
-LoggerBase*& DefaultLogger::output() {
-  static LoggerBase* current = get_default_logger();
+OutputBase*& DefaultLogger::current_output() {
+  static OutputBase* current = get_default_logger();
   return current;
 }
 

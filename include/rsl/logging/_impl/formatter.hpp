@@ -42,7 +42,7 @@ struct FormatString {
   }
   using initialize_t = void (FormatString::*)(std::string_view, rsl::source_location);
 
-  template <typename T>  //, typename... Empty>
+  template <typename T>
     requires std::convertible_to<T const&, std::string_view>
   consteval explicit(false)
       FormatString(T const& fmt,
