@@ -25,13 +25,12 @@ int main() {
   using namespace rsl::logging;
   auto error_sink = TerminalSink();
   auto logger = Output(
-    // SystemdSink(), 
-    TerminalSink(),
-    filter(event->severity >= rsl::log_level::ERROR) >> error_sink,
-    filter([](auto const& ev){ return ev.severity >= rsl::log_level::ERROR; }) >> error_sink
+    SystemdSink(), 
+    filter(event->severity >= rsl::log_level::ERROR) >> error_sink
+    // filter([](auto const& ev){ return ev.severity >= rsl::log_level::ERROR; }) >> error_sink
   );
   logger.set_as_default();
-  // set_output(logger);
+
   {
     $context("main", rsl::log_level::INFO, foo=123);
     rsl::info("from main context");
