@@ -1,17 +1,9 @@
 #pragma once
-#include <thread>
-#include <chrono>
+#include <rsl/logging/event.hpp>
+#include <rsl/logging/filter.hpp>
 
-#include "context.hpp"
-#include "event.hpp"
-#include "filter.hpp"
 
 namespace rsl::logging {
-namespace _impl {
-template <LogLevel Level, typename... Args>
-struct FormatString;
-}
-
 struct Sink : Filter {
   // This is the base class of all sinks. The expected member functions to customize
   // this are not virtual.
@@ -76,38 +68,7 @@ struct Output final
   void set_as_default() && = delete;
   void set_as_default() & { set_output(*this); }
 };
+
 template <typename... Ts>
 Output(Ts&&...) -> Output<Ts...>;
-
-struct NullLogger {
-  static void context(Metadata const& meta, bool entered, bool async_handover) {}
-
-  template <LogLevel Severity, typename... Args>
-  static void emit(Metadata& meta, _impl::FormatString<Severity, Args...> fmt, Args&&... args) {}
-};
-
-struct DefaultLogger {
-  static void context(Metadata const& meta, bool entered, bool async_handover) {
-    if (auto* output = current_output()) {
-      output->context(meta, entered, async_handover);
-    }
-  }
-
-  template <LogLevel Severity, typename... Args>
-  static void emit(Metadata& meta, _impl::FormatString<Severity, Args...> fmt, Args&&... args) {
-    auto message = fmt.make_message(std::forward<Args>(args)...);
-    auto event   = Event{.meta = meta, .text = message};
-    if (auto* output = current_output()) {
-      output->emit(event);
-    }
-  }
-
-  static void set_output(OutputBase& output) {
-    current_output() = &output;
-  }
-
-private:
-  static OutputBase*& current_output();
-};
-
-}  // namespace rsl::logging
+}

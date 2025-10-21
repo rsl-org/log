@@ -15,7 +15,6 @@
 #include <rsl/logging/event.hpp>
 #include <rsl/logging/context.hpp>
 #include <rsl/logging/field.hpp>
-#include <rsl/logging/logger.hpp>
 
 namespace rsl::logging {
 namespace _impl {

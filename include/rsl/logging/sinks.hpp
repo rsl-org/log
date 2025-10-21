@@ -1,5 +1,5 @@
 #pragma once
-#include "logger.hpp"
+#include "output.hpp"
 
 #include <print>
 

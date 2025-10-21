@@ -83,15 +83,18 @@ extern thread_local Context* current_context;
 
 template <typename T = std::monostate>
 struct ContextGuard : private Context {
-  T extra;
+  T extra_data;
 
   explicit ContextGuard(std::string name,
                         LogLevel min_level,
-                        T extra = {},
                         ExtraFields arguments            = {},
+                        T extra_fields                   = {},
                         rsl::source_location const& sloc = std::source_location::current())
-      : Context(name, min_level, arguments, {}, sloc) {
-    // TODO bind T as ExtraFields
+      : Context(name, min_level, arguments, {}, sloc)
+      , extra_data(extra_fields) {
+    if constexpr (not std::same_as<T, std::monostate>) {
+      extra = ExtraFields(extra_fields);
+    }
     enter<T>();
   }
 
@@ -104,7 +107,6 @@ struct ContextGuard : private Context {
 
   using Context::enabled_for;
 };
-
 
 namespace _log_impl {
 template <typename T>

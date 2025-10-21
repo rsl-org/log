@@ -1,4 +1,4 @@
-#include "logger.hpp"
+#include "default.hpp"
 
 namespace rsl::logging {
 struct AsyncLogger : DefaultLogger {

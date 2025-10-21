@@ -1,5 +1,5 @@
 #pragma once
-#include <rsl/logging/logger.hpp>
+#include <rsl/logging/flavor/default.hpp>
 #include <rsl/logging/level.hpp>
 #include <rsl/logging/event.hpp>
 

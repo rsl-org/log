@@ -7,9 +7,9 @@
 #include <meta>
 #include <atomic>
 
-
 #include <rsl/serialize>
 #include <rsl/repr>
+#include <rsl/kwargs>
 
 namespace rsl::logging {
 class Field {
@@ -51,7 +51,7 @@ class Field {
       auto const& control_block = *static_cast<RefCounted const*>(field->ptr);
       // control_block.references++;
       auto val = control_block.references.fetch_add(1);
-      return Field(field->ptr, field->vtable, field->name);
+      return {field->ptr, field->vtable, field->name};
     }
 
     static void destroy(void* p) {
@@ -86,7 +86,7 @@ class Field {
     return &table;
   }
 
-  void* ptr                   = nullptr;
+  void* ptr            = nullptr;
   VTable const* vtable = nullptr;
 
   void destroy() {
@@ -117,10 +117,7 @@ public:
   Field(const Field& other) : Field(copy_from(other)) {}
 
   // move constructor
-  Field(Field&& other) noexcept
-      : ptr(other.ptr)
-      , vtable(other.vtable)
-      , name(other.name) {
+  Field(Field&& other) noexcept : ptr(other.ptr), vtable(other.vtable), name(other.name) {
     other.ptr    = nullptr;
     other.vtable = nullptr;
   }
@@ -148,7 +145,7 @@ public:
   template <typename T>
     requires(not std::same_as<T, void>)
   Field(std::string_view name, T* value)
-      : ptr(value)
+      : ptr((void*)value)
       , vtable(make_vtable<T, false>())
       , name(name) {}
 
@@ -191,14 +188,18 @@ public:
 };
 
 struct ExtraFields {
-  //TODO this could be a span that views memory on the stack and transitions to heap if its elts do
+  // TODO this could be a span that views memory on the stack and transitions to heap if its elts do
   std::vector<Field> fields;
 
   ExtraFields() = default;
+
+  template <std::size_t N>
+  explicit(false) ExtraFields(std::array<Field, N> const& fields) {}
+
   explicit(false) ExtraFields(std::vector<Field> fields) : fields(std::move(fields)) {}
   template <typename T>
-    requires std::is_aggregate_v<std::remove_cvref_t<T>>
-  explicit(false) ExtraFields(T&& kwargs) {
+    requires is_kwargs<T>
+  explicit(false) ExtraFields(T const& kwargs) {
     template for (constexpr auto member : std::define_static_array(
                       nonstatic_data_members_of(^^typename std::remove_cvref_t<T>::type,
                                                 std::meta::access_context::current()))) {
@@ -206,7 +207,7 @@ struct ExtraFields {
       // we need to clone here
       // the kwargs wrapper will not live long enough, it'll be destroyed
       // after the full expression in which this container is created
-      fields.push_back(Field(name, &kwargs.[:member:]).clone());
+      fields.push_back(Field(name, &kwargs.[:member:]));
     }
   }
 

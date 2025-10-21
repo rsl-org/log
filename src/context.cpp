@@ -4,7 +4,7 @@
 #include <atomic>
 
 #include <rsl/logging/context.hpp>
-#include <rsl/logging/logger.hpp>
+#include <rsl/logging/output.hpp>
 
 namespace rsl::logging {
 thread_local Context* current_context = Context::get_default();

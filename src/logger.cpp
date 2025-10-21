@@ -1,4 +1,4 @@
-#include <rsl/logging/logger.hpp>
+#include <rsl/logging/flavor/default.hpp>
 #include <rsl/logging/sinks.hpp>
 
 namespace rsl::logging {

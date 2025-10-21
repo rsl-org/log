@@ -3,6 +3,7 @@
 #include <ranges>
 
 #include <rsl/logging/field.hpp>
+#include <rsl/util/to_string.hpp>
 
 namespace rsl::logging {
 namespace _impl {
@@ -27,20 +28,24 @@ struct FunctionScope {
   }
 
   template <typename... Ts>
-  static ExtraFields capture_args(Ts&&... args) {
+  static std::array<Field, max_idx> capture_args(Ts&&... args) {
     std::array<Field, max_idx> arguments;
+    std::size_t unnamed_count = 0;
+
     template for (constexpr auto Idx : std::views::iota(0ZU, max_idx)) {
       constexpr static auto param = parameters_of(scope)[Idx];
-      constexpr static auto name  = define_static_string(identifier_of(param));
 
       typename[:type_of(param):]* ptr = nullptr;
       if constexpr (sizeof...(Ts) >= Idx) {
         ptr = args...[Idx];
       }
-      arguments[Idx] = Field(name, ptr);
+
+      arguments[Idx] = Field(has_identifier(param) ? identifier_of(param)
+                                                   : "unnamed_" + rsl::util::utos(unnamed_count++),
+                             ptr);
     }
 
-    return ExtraFields({arguments.begin(), arguments.end()});
+    return arguments;
   }
 };
 }  // namespace rsl::logging

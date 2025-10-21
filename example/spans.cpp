@@ -1,10 +1,8 @@
 #include <rsl/log>
 
-using enum rsl::logging::LogLevel;
-
 void bar() {
   // TODO
-  rsl::logging::ContextGuard context{"bar", INFO, std::monostate()};
+  RSL_LOG_CONTEXT("bar", rsl::log_level::INFO, x=1, y=2);
   rsl::info("from bar");
 }
 
@@ -19,7 +17,7 @@ int main() {
 
   // rsl::logging::ContextGuard context{INFO, "main"};
   auto x = 42;
-  auto ctx = rsl::log::context("main", INFO);
+  auto ctx = rsl::log::context("main", rsl::log_level::INFO);
   // ctx.extra = ExtraFields{{rsl::_log_impl::Field(^^x).set_ptr(&x)}};
   ctx.enter();
   rsl::error("test error");
