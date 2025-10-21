@@ -1,6 +1,7 @@
 #pragma once
 #include <rsl/logging/_impl/formatter.hpp>
 #include <rsl/logging/_impl/args.hpp>
+#include <rsl/logging/filter.hpp>
 #include <rsl/logging/output.hpp>
 #include <rsl/logging/context.hpp>
 

@@ -1,4 +1,5 @@
 #pragma once
+#include <meta>
 
 namespace rsl::_log_impl {
 template <typename...>
