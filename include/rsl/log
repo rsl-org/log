@@ -11,9 +11,8 @@
 #include <utility>
 
 #include <rsl/kwargs>
-#  define RSL_LOG_CONTEXT(name, level, ...) \
-    rsl::log::context_guard _(name, level, RSL_LOG_ARGS, RSL_KWARGS(__VA_ARGS__))
-
+#define RSL_LOG_CONTEXT(name, level, ...) \
+  rsl::log::context_guard _(name, level, RSL_LOG_ARGS, RSL_KWARGS(__VA_ARGS__))
 
 #define RSL_TRACE(...)                                      \
   (void)(is_enabled_for(::rsl::logging::LogLevel::TRACE) && \
@@ -36,7 +35,7 @@
 
 #ifdef RSL_DOLLAR_MACROS
 #  define $log_args           RSL_LOG_ARGS
-#  define $context(name, ...) RSL_LOG_CONTEXT(name, __VA_ARGS__)
+#  define $context(...)       RSL_LOG_CONTEXT(__VA_ARGS__)
 #  define $trace(...)         RSL_TRACE(__VA_ARGS__)
 #  define $debug(...)         RSL_DEBUG(__VA_ARGS__)
 #  define $info(...)          RSL_INFO(__VA_ARGS__)

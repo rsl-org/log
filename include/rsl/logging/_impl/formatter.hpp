@@ -11,6 +11,7 @@
 
 #include <rsl/source_location>
 #include <rsl/format>
+#include <rsl/kwargs>
 
 #include <rsl/logging/event.hpp>
 #include <rsl/logging/context.hpp>
@@ -76,7 +77,11 @@ void emit_event(ExtraFields const* fnc_args,
                          .context   = context ? *context : Context(),
                          .arguments = fnc_args ? *fnc_args : ExtraFields{},
                          .sloc      = fmt.sloc};
-
+    if constexpr (sizeof...(Args) > 0) {
+      if constexpr (is_kwargs<std::remove_cvref_t<Args...[sizeof...(Args) - 1]>>) {
+        meta.extra = ExtraFields(args...[sizeof...(Args) - 1]);
+      }
+    }
     selected_logger<Empty...>.emit(meta, fmt, std::forward<Args>(args)...);
   }
 }

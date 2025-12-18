@@ -19,6 +19,7 @@ struct Metadata {
   std::thread::id thread_id;
   Context context;
   ExtraFields arguments;
+  ExtraFields extra;
 
   // set by the formatter
   rsl::source_location sloc;

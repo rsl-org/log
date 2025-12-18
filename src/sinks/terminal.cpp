@@ -5,6 +5,9 @@
 namespace rsl::logging {
 void TerminalSink::emit_event(Event const& event) {
   std::println("{} ({: >8} {}) {}", event.meta.timestamp, event.meta.context.name, event.meta.context.id, std::string(event.text));
+  for (auto const& extra : event.meta.extra) {
+    std::println("  {} = {}", extra.name, extra.to_string());
+  }
 }
 
 void TerminalSink::enter_context(Metadata const& meta, bool handover) {

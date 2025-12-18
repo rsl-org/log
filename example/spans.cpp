@@ -1,8 +1,8 @@
+#define RSL_DOLLAR_MACROS
 #include <rsl/log>
 
 void bar() {
-  // TODO
-  RSL_LOG_CONTEXT("bar", rsl::log_level::INFO, x=1, y=2);
+  $context("bar", rsl::log_level::INFO, x=1, y=2);
   rsl::info("from bar");
 }
 
@@ -15,12 +15,10 @@ void foo() {
 int main() {
   rsl::error("error before main context");
 
-  // rsl::logging::ContextGuard context{INFO, "main"};
   auto x = 42;
   auto ctx = rsl::log::context("main", rsl::log_level::INFO);
-  // ctx.extra = ExtraFields{{rsl::_log_impl::Field(^^x).set_ptr(&x)}};
   ctx.enter();
-  rsl::error("test error");
+  rsl::error("test error", $args(foo=123));
   foo();
   ctx.exit();
 }

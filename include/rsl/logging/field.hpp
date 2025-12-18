@@ -194,7 +194,9 @@ struct ExtraFields {
   ExtraFields() = default;
 
   template <std::size_t N>
-  explicit(false) ExtraFields(std::array<Field, N> const& fields) {}
+  explicit(false) ExtraFields(std::array<Field, N> const& fields) {
+    // TODO
+  }
 
   explicit(false) ExtraFields(std::vector<Field> fields) : fields(std::move(fields)) {}
   template <typename T>
